@@ -1,0 +1,91 @@
+{
+  "chapter": {
+    "title": "Number basics",
+    "slug": "number-basics",
+    "description": "Sample NZSL lessons parsed from the official dictionary search for “number”. Videos link to NZSL Signbank media for learning reference.",
+    "sortOrder": 1
+  },
+  "lessons": [
+    {
+      "nzslId": 3218,
+      "name": "number",
+      "secondaryName": "figure",
+      "maoriName": "tau, nama",
+      "wordClass": "noun",
+      "videoUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/3218/number.3218.main_glosses.jo.r480x360.mp4",
+      "drawingUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/3218/number-3218-high_resolution.png",
+      "signPageUrl": "https://www.nzsl.nz/signs/3218"
+    },
+    {
+      "nzslId": 6437,
+      "name": "number plate",
+      "secondaryName": "license plate, vehicle registration plate",
+      "maoriName": "papa nama, pereti raihana",
+      "wordClass": "noun",
+      "videoUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/6437/number_plate.6437.main_glosses.dh.r480x360.mp4",
+      "drawingUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/6437/number_plate-6437-high_resolution.png",
+      "signPageUrl": "https://www.nzsl.nz/signs/6437"
+    },
+    {
+      "nzslId": 1372,
+      "name": "how many",
+      "secondaryName": "number",
+      "maoriName": "e hia, tokohia",
+      "wordClass": "interrogative; noun",
+      "videoUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/1372/how_many.1372.main_glosses.vs.r480x360.mp4",
+      "drawingUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/1372/how_many-1372-high_resolution.png",
+      "signPageUrl": "https://www.nzsl.nz/signs/1372"
+    },
+    {
+      "nzslId": 1553,
+      "name": "many",
+      "secondaryName": "a great many, a large number of, a lot of, lots, numerous, too many",
+      "maoriName": "rahi, maha",
+      "wordClass": "adjective",
+      "videoUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/1553/many.1553.main_glosses.vs.r480x360.mp4",
+      "drawingUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/1553/many-1553-high_resolution.png",
+      "signPageUrl": "https://www.nzsl.nz/signs/1553"
+    },
+    {
+      "nzslId": 5627,
+      "name": "ATM",
+      "secondaryName": "automated teller machine, cashpoint, key in pin number",
+      "maoriName": "mīhini moni",
+      "wordClass": "noun; verb",
+      "videoUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/5627/ATM.5627.main_glosses.sp.r480x360.mp4",
+      "drawingUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/5627/ATM-5627-high_resolution.png",
+      "signPageUrl": "https://www.nzsl.nz/signs/5627"
+    },
+    {
+      "nzslId": 3242,
+      "name": "many",
+      "secondaryName": "a great many, a lot of, large number of, lots of, numerous",
+      "maoriName": "maha",
+      "wordClass": "adjective; pronoun",
+      "videoUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/3242/many.3242.main_glosses.sp.r480x360.mp4",
+      "drawingUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/3242/many-3242-high_resolution.png",
+      "signPageUrl": "https://www.nzsl.nz/signs/3242"
+    },
+    {
+      "nzslId": 6246,
+      "name": "most",
+      "secondaryName": "a great many, a lot of, many, large number of, lots of, numerous",
+      "maoriName": "nuinga",
+      "wordClass": "adjective; pronoun",
+      "videoUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/6246/most.6246.main_glosses.mb.r480x360.mp4",
+      "drawingUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/6246/most-6246-high_resolution.png",
+      "signPageUrl": "https://www.nzsl.nz/signs/6246"
+    },
+    {
+      "nzslId": 2754,
+      "name": "a lot",
+      "secondaryName": "a great many, a large number of, lots, many, numerous",
+      "maoriName": "rahi, maha",
+      "wordClass": "adjective",
+      "videoUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/2754/many.2754.main_glosses.sp.r480x360.mp4",
+      "drawingUrl": "https://nzsl-signbank-media-production.s3.amazonaws.com/glossvideo/2754/a_lot-2754-high_resolution.png",
+      "signPageUrl": "https://www.nzsl.nz/signs/2754"
+    }
+  ],
+  "generatedAt": "2026-08-03T23:45:07.042Z"
+}

@@ -1,0 +1,1 @@
+export { seedOnInit } from './seedContent'

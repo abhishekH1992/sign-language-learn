@@ -1,0 +1,61 @@
+import { postgresAdapter } from '@payloadcms/db-postgres'
+import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import path from 'path'
+import { buildConfig } from 'payload'
+import { fileURLToPath } from 'url'
+import sharp from 'sharp'
+
+import { Chapters } from './collections/Chapters'
+import { Lessons } from './collections/Lessons'
+import { LessonProgress } from './collections/LessonProgress'
+import { Media } from './collections/Media'
+import { Notifications } from './collections/Notifications'
+import { PracticeAttempts } from './collections/PracticeAttempts'
+import { QuizAttempts } from './collections/QuizAttempts'
+import { Quizzes } from './collections/Quizzes'
+import { Sections } from './collections/Sections'
+import { Users } from './collections/Users'
+import { seedOnInit } from './seed/onInit'
+
+const filename = fileURLToPath(import.meta.url)
+const dirname = path.dirname(filename)
+
+export default buildConfig({
+  admin: {
+    user: Users.slug,
+    importMap: {
+      baseDir: path.resolve(dirname),
+    },
+    meta: {
+      titleSuffix: '— NZSL Learn',
+    },
+  },
+  collections: [
+    Users,
+    Media,
+    Chapters,
+    Sections,
+    Lessons,
+    Quizzes,
+    LessonProgress,
+    QuizAttempts,
+    PracticeAttempts,
+    Notifications,
+  ],
+  editor: lexicalEditor(),
+  secret: process.env.PAYLOAD_SECRET || '',
+  typescript: {
+    outputFile: path.resolve(dirname, 'payload-types.ts'),
+  },
+  db: postgresAdapter({
+    pool: {
+      connectionString: process.env.DATABASE_URL || '',
+    },
+    push: true,
+  }),
+  sharp,
+  plugins: [],
+  onInit: async (payload) => {
+    await seedOnInit(payload)
+  },
+})

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="176" height="132" viewBox="0 0 176 132" role="img" aria-label="Sign placeholder">
+  <rect width="176" height="132" rx="12" fill="#e8efea"/>
+  <circle cx="88" cy="52" r="18" fill="#0b6e4f" opacity="0.35"/>
+  <path d="M52 98c10-18 28-28 36-28s26 10 36 28" fill="none" stroke="#0b6e4f" stroke-width="6" stroke-linecap="round"/>
+</svg>

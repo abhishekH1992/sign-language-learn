@@ -1,0 +1,51 @@
+{
+  "name": "nzsl-learn",
+  "version": "1.0.0",
+  "description": "NZSL learning app with Payload CMS, practice feedback, and OpenAI tips",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "cross-env NODE_OPTIONS=--no-deprecation next build",
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
+    "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "lint": "cross-env NODE_OPTIONS=--no-deprecation eslint .",
+    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "parse:nzsl": "tsx src/seed/parse-html.ts",
+    "seed": "tsx src/seed/seed.ts",
+    "db:up": "docker compose up -d postgres",
+    "cv:dev": "cd services/cv && python3 -m uvicorn main:app --reload --port 8000"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^0.10.21",
+    "@payloadcms/db-postgres": "3.82.1",
+    "@payloadcms/next": "3.82.1",
+    "@payloadcms/richtext-lexical": "3.82.1",
+    "@payloadcms/ui": "3.82.1",
+    "cross-env": "10.1.0",
+    "dotenv": "^17.4.2",
+    "graphql": "^16.8.1",
+    "next": "15.4.11",
+    "openai": "^5.12.2",
+    "payload": "3.82.1",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "sharp": "0.34.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/react": "19.1.9",
+    "@types/react-dom": "19.1.7",
+    "eslint": "^9.16.0",
+    "eslint-config-next": "15.4.11",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "prettier": "^3.4.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

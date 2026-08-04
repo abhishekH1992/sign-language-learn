@@ -1,0 +1,20 @@
+services:
+  postgres:
+    restart: unless-stopped
+    image: postgres:16-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: abhi
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nzsl
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d nzsl']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
