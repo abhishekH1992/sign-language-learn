@@ -56,23 +56,6 @@ export async function POST(request: Request) {
     inputs: { score: body.score, signalCodes: body.signalCodes },
   })
 
-  await payload.create({
-    collection: 'practice-attempts',
-    data: {
-      user: user.id,
-      lesson: lesson.id,
-      score: body.score,
-      signalCodes: {
-        codes: body.signalCodes,
-        basis: body.basis ?? null,
-        scoreSource: body.scoreSource ?? null,
-      },
-      aiFeedback: feedback.feedback,
-      completedAt: new Date().toISOString(),
-    },
-    overrideAccess: true,
-  })
-
   await upsertLessonProgress(payload, user, lesson.id, {
     practiceDone: true,
     videoWatched: true,

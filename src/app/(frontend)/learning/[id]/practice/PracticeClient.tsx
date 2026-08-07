@@ -9,7 +9,7 @@ type Props = {
   lessonId: string
   lessonName: string
   maoriName: string
-  drawingUrl: string
+  imageUrl: string
 }
 
 type ScoreBasis = Record<string, unknown>
@@ -30,7 +30,7 @@ function logPractice(event: string, details?: Record<string, unknown>) {
   console.info(`[NZSL practice] ${event}`, details ?? {})
 }
 
-export function PracticeClient({ lessonId, lessonName, maoriName, drawingUrl }: Props) {
+export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const landmarkerRef = useRef<HandLandmarker | null>(null)
@@ -309,11 +309,11 @@ export function PracticeClient({ lessonId, lessonName, maoriName, drawingUrl }: 
   return (
     <div className="stack">
       <div className="btn-row">
-        {drawingUrl ? (
+        {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={drawingUrl}
-            alt={`Reference drawing for ${lessonName}`}
+            src={imageUrl}
+            alt={`Reference image for ${lessonName}`}
             width={160}
             height={120}
             style={{ borderRadius: 12, border: '1px solid var(--line)' }}

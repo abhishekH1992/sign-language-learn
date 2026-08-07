@@ -14,7 +14,7 @@ type Props = {
   lessonId: string
   quizId: string
   questions: Question[]
-  drawingUrl: string
+  imageUrl: string
   lessonName: string
 }
 
@@ -25,7 +25,7 @@ type Result = {
   usedOpenAI: boolean
 }
 
-export function QuizForm({ lessonId, quizId, questions, drawingUrl, lessonName }: Props) {
+export function QuizForm({ lessonId, quizId, questions, imageUrl, lessonName }: Props) {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [result, setResult] = useState<Result | null>(null)
@@ -124,11 +124,11 @@ export function QuizForm({ lessonId, quizId, questions, drawingUrl, lessonName }
         <strong>Question</strong>
         <span>{progressLabel}</span>
       </div>
-      {drawingUrl ? (
+      {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={drawingUrl}
-          alt={`Drawing for ${lessonName}`}
+          src={imageUrl}
+          alt={`Image for ${lessonName}`}
           width={220}
           height={160}
           style={{ borderRadius: 12, border: '1px solid var(--line)', background: '#fff' }}

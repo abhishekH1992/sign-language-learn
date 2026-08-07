@@ -21,6 +21,7 @@ export const Users: CollectionConfig = {
     ],
   },
   access: {
+    admin: ({ req }) => (req.user as { role?: string } | null)?.role === 'admin',
     create: () => true,
     read: ({ req }) => {
       if (!req.user) return false

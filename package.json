@@ -15,6 +15,7 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "parse:nzsl": "tsx src/seed/parse-html.ts",
     "seed": "tsx src/seed/seed.ts",
+    "seed:alphabet": "tsx src/seed/runAlphabetMedia.ts",
     "db:up": "docker compose up -d postgres",
     "cv:dev": "cd services/cv && python3 -m uvicorn main:app --reload --port 8000"
   },

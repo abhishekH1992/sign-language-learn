@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 export const LessonProgress: CollectionConfig = {
   slug: 'lesson-progress',
   admin: {
+    hidden: true,
     useAsTitle: 'id',
     defaultColumns: ['user', 'lesson', 'status', 'bestQuizScore'],
   },

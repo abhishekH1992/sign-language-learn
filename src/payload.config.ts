@@ -10,12 +10,9 @@ import { Lessons } from './collections/Lessons'
 import { LessonProgress } from './collections/LessonProgress'
 import { Media } from './collections/Media'
 import { Notifications } from './collections/Notifications'
-import { PracticeAttempts } from './collections/PracticeAttempts'
-import { QuizAttempts } from './collections/QuizAttempts'
 import { Quizzes } from './collections/Quizzes'
 import { Sections } from './collections/Sections'
 import { Users } from './collections/Users'
-import { seedOnInit } from './seed/onInit'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -38,8 +35,6 @@ export default buildConfig({
     Lessons,
     Quizzes,
     LessonProgress,
-    QuizAttempts,
-    PracticeAttempts,
     Notifications,
   ],
   editor: lexicalEditor(),
@@ -55,7 +50,4 @@ export default buildConfig({
   }),
   sharp,
   plugins: [],
-  onInit: async (payload) => {
-    await seedOnInit(payload)
-  },
 })
