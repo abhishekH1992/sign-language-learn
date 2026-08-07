@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { generatePracticeFeedback } from '@/lib/openai-feedback'
+// import { generatePracticeFeedback } from '@/lib/openai-feedback'
 import { upsertLessonProgress } from '@/lib/progress'
 
 export async function POST(request: Request) {
@@ -30,31 +30,13 @@ export async function POST(request: Request) {
     id: body.lessonId,
   })
 
-  console.info('[NZSL practice] submit_received', {
-    userId: user.id,
-    lessonId: lesson.id,
-    lessonName: lesson.name,
-    score: body.score,
-    signalCodes: body.signalCodes,
-    scoreSource: body.scoreSource,
-    basis: body.basis,
-    feedbackBasis:
-      'Text feedback is generated from score + signalCodes (+ optional OpenAI). CV does not identify the NZSL gloss yet.',
-  })
-
-  const feedback = await generatePracticeFeedback({
-    lessonName: lesson.name,
-    maoriName: lesson.maoriName,
-    score: body.score,
-    signalCodes: body.signalCodes,
-  })
-
-  console.info('[NZSL practice] feedback_generated', {
-    lessonName: lesson.name,
-    usedOpenAI: feedback.usedOpenAI,
-    feedback: feedback.feedback,
-    inputs: { score: body.score, signalCodes: body.signalCodes },
-  })
+  // Practice OpenAI feedback temporarily disabled.
+  // const feedback = await generatePracticeFeedback({
+  //   lessonName: lesson.name,
+  //   maoriName: lesson.maoriName,
+  //   score: body.score,
+  //   signalCodes: body.signalCodes,
+  // })
 
   await upsertLessonProgress(payload, user, lesson.id, {
     practiceDone: true,
@@ -64,8 +46,8 @@ export async function POST(request: Request) {
   return NextResponse.json({
     score: body.score,
     signalCodes: body.signalCodes,
-    feedback: feedback.feedback,
-    usedOpenAI: feedback.usedOpenAI,
+    feedback: '',
+    usedOpenAI: false,
     basis: body.basis ?? null,
   })
 }

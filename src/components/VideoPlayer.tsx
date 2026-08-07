@@ -161,9 +161,6 @@ function YouTubePlayer({
         <Button type="button" variant="secondary" onClick={togglePlay}>
           {playing ? 'Pause' : 'Play'}
         </Button>
-        <span className="muted" style={{ alignSelf: 'center' }}>
-          Video plays muted
-        </span>
       </div>
     </div>
   )
@@ -237,9 +234,6 @@ function NativePlayer({ src, title, onWatched }: Props) {
         <Button type="button" variant="secondary" onClick={toggleSlow} aria-pressed={slow}>
           {slow ? 'Normal speed' : 'Slow motion'}
         </Button>
-        <span className="muted" style={{ alignSelf: 'center' }}>
-          Video plays muted
-        </span>
       </div>
     </div>
   )
