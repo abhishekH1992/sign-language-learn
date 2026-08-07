@@ -29,8 +29,10 @@ npm install
 # 3) Parse NZSL HTML dump → seed JSON (first time / when dumps change)
 npm run parse:nzsl
 
-# 4) Terminal A — Next.js + Payload (seeds on boot)
+# 4) Terminal A — Next.js + Payload
 npm run dev
+# Optional: seed sample content
+# npm run seed
 
 # 5) Terminal B — CV scoring API (practice camera)
 python3 -m venv services/cv/.venv
@@ -47,7 +49,7 @@ Open:
 
 Demo logins: `learner@example.com` / `password123`, `admin@example.com` / `password123`
 
-Content seeds automatically on app init from `dumps/numberblock.html` (idempotent by lesson `name`). You can also run `npm run seed`.
+Sample content is not seeded on boot. Run `npm run seed` when you want the Number basics fixture (idempotent by lesson `name`).
 
 ### Practice logs
 

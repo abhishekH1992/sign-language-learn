@@ -13,7 +13,6 @@ import { Notifications } from './collections/Notifications'
 import { Quizzes } from './collections/Quizzes'
 import { Sections } from './collections/Sections'
 import { Users } from './collections/Users'
-import { seedOnInit } from './seed/onInit'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -51,7 +50,4 @@ export default buildConfig({
   }),
   sharp,
   plugins: [],
-  onInit: async (payload) => {
-    await seedOnInit(payload)
-  },
 })
