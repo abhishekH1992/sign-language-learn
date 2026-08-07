@@ -11,9 +11,9 @@ export async function getCurrentUser() {
 }
 
 export async function requireUser() {
-  const ctx = await getCurrentUser()
-  if (!ctx.user) {
+  const { payload, user } = await getCurrentUser()
+  if (!user) {
     redirect('/login')
   }
-  return ctx
+  return { payload, user }
 }

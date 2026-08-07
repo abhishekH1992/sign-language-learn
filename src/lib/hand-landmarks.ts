@@ -48,7 +48,7 @@ export function handBoundingBox(hand: Landmark[], pad = 0.04): HandBox {
   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY }
 }
 
-export function combinedBoundingBox(hands: Landmark[], pad = 0.05): HandBox | null {
+export function combinedBoundingBox(hands: Landmark[][], pad = 0.05): HandBox | null {
   if (!hands.length) return null
   const xs = hands.flatMap((hand) => hand.map((p) => p.x))
   const ys = hands.flatMap((hand) => hand.map((p) => p.y))

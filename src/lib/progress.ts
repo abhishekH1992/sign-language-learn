@@ -1,5 +1,9 @@
 import type { Payload } from 'payload'
 
+function toNumericId(value: number | string): number {
+  return typeof value === 'number' ? value : Number(value)
+}
+
 export async function upsertLessonProgress(
   payload: Payload,
   user: { id: number | string },
@@ -13,10 +17,13 @@ export async function upsertLessonProgress(
     status?: 'not_started' | 'in_progress' | 'completed'
   },
 ) {
+  const userId = toNumericId(user.id)
+  const lessonNumericId = toNumericId(lessonId)
+
   const existing = await payload.find({
     collection: 'lesson-progress',
     where: {
-      and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }],
+      and: [{ user: { equals: userId } }, { lesson: { equals: lessonNumericId } }],
     },
     limit: 1,
     overrideAccess: true,
@@ -41,8 +48,8 @@ export async function upsertLessonProgress(
   }
 
   const data = {
-    user: user.id,
-    lesson: lessonId,
+    user: userId,
+    lesson: lessonNumericId,
     videoWatched,
     practiceDone,
     quizPassed,

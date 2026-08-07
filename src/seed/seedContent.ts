@@ -14,7 +14,7 @@ export async function seedContent(payload: Payload): Promise<void> {
     overrideAccess: true,
   })
 
-  let chapterId: number | string
+  let chapterId: number
   if (existingChapter.docs[0]) {
     const updated = await payload.update({
       collection: 'chapters',
@@ -28,7 +28,7 @@ export async function seedContent(payload: Payload): Promise<void> {
       overrideAccess: true,
       context: { skipSectionChapterSync: true },
     })
-    chapterId = updated.id
+    chapterId = Number(updated.id)
   } else {
     const created = await payload.create({
       collection: 'chapters',
@@ -42,7 +42,7 @@ export async function seedContent(payload: Payload): Promise<void> {
       overrideAccess: true,
       context: { skipSectionChapterSync: true },
     })
-    chapterId = created.id
+    chapterId = Number(created.id)
   }
 
   const existingSection = await payload.find({
@@ -52,7 +52,7 @@ export async function seedContent(payload: Payload): Promise<void> {
     overrideAccess: true,
   })
 
-  let sectionId: number | string
+  let sectionId: number
   if (existingSection.docs[0]) {
     const updated = await payload.update({
       collection: 'sections',
@@ -64,7 +64,7 @@ export async function seedContent(payload: Payload): Promise<void> {
       },
       overrideAccess: true,
     })
-    sectionId = updated.id
+    sectionId = Number(updated.id)
   } else {
     const created = await payload.create({
       collection: 'sections',
@@ -76,14 +76,14 @@ export async function seedContent(payload: Payload): Promise<void> {
       },
       overrideAccess: true,
     })
-    sectionId = created.id
+    sectionId = Number(created.id)
   }
 
-  const lessonIds: Array<number | string> = []
+  const lessonIds: number[] = []
 
   for (const [index, letter] of ALPHABET_LETTERS.entries()) {
     const name = letter
-    const mediaId = mediaByLetter[letter]
+    const mediaId = Number(mediaByLetter[letter])
 
     const existing = await payload.find({
       collection: 'lessons',
@@ -105,7 +105,7 @@ export async function seedContent(payload: Payload): Promise<void> {
       published: true,
     }
 
-    let lessonId: number | string
+    let lessonId: number
     if (existing.docs[0]) {
       const updated = await payload.update({
         collection: 'lessons',
@@ -113,14 +113,14 @@ export async function seedContent(payload: Payload): Promise<void> {
         data: lessonData,
         overrideAccess: true,
       })
-      lessonId = updated.id
+      lessonId = Number(updated.id)
     } else {
       const created = await payload.create({
         collection: 'lessons',
         data: lessonData,
         overrideAccess: true,
       })
-      lessonId = created.id
+      lessonId = Number(created.id)
     }
 
     lessonIds.push(lessonId)

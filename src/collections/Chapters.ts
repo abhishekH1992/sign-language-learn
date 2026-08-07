@@ -1,23 +1,29 @@
 import type { CollectionConfig, PayloadRequest } from 'payload'
 
+function toId(value: number | string | { id: number | string }): number {
+  const raw = typeof value === 'object' ? value.id : value
+  return typeof raw === 'number' ? raw : Number(raw)
+}
+
 function sectionIdsFromRows(
   rows: Array<{ section?: number | string | { id: number | string } | null }> | null | undefined,
-): Array<number | string> {
+): number[] {
   if (!rows?.length) return []
   return rows
     .map((row) => {
       const value = row.section
-      if (value == null) return null
-      return typeof value === 'object' ? value.id : value
+      if (value == null || value === '') return null
+      const id = toId(value)
+      return Number.isFinite(id) ? id : null
     })
-    .filter((id): id is number | string => id != null && id !== '')
+    .filter((id): id is number => id != null)
 }
 
 function chapterIdsFromField(
   chapters: Array<number | string | { id: number | string }> | null | undefined,
-): Array<number | string> {
+): number[] {
   if (!chapters?.length) return []
-  return chapters.map((item) => (typeof item === 'object' ? item.id : item))
+  return chapters.map((item) => toId(item)).filter((id) => Number.isFinite(id))
 }
 
 async function syncSectionChapters({
@@ -27,12 +33,12 @@ async function syncSectionChapters({
   previousSectionIds,
 }: {
   req: PayloadRequest
-  chapterId: number | string
-  nextSectionIds: Array<number | string>
-  previousSectionIds: Array<number | string>
+  chapterId: number
+  nextSectionIds: number[]
+  previousSectionIds: number[]
 }) {
-  const next = new Set(nextSectionIds.map(String))
-  const previous = new Set(previousSectionIds.map(String))
+  const next = new Set(nextSectionIds)
+  const previous = new Set(previousSectionIds)
 
   for (const sectionId of nextSectionIds) {
     const section = await req.payload.findByID({
@@ -43,7 +49,7 @@ async function syncSectionChapters({
       overrideAccess: true,
     })
     const chapters = chapterIdsFromField(section.chapters)
-    if (!chapters.some((id) => String(id) === String(chapterId))) {
+    if (!chapters.includes(chapterId)) {
       await req.payload.update({
         collection: 'sections',
         id: sectionId,
@@ -56,8 +62,8 @@ async function syncSectionChapters({
   }
 
   for (const sectionId of previousSectionIds) {
-    if (next.has(String(sectionId))) continue
-    if (!previous.has(String(sectionId))) continue
+    if (next.has(sectionId)) continue
+    if (!previous.has(sectionId)) continue
 
     const section = await req.payload.findByID({
       collection: 'sections',
@@ -66,9 +72,7 @@ async function syncSectionChapters({
       req,
       overrideAccess: true,
     })
-    const chapters = chapterIdsFromField(section.chapters).filter(
-      (id) => String(id) !== String(chapterId),
-    )
+    const chapters = chapterIdsFromField(section.chapters).filter((id) => id !== chapterId)
     await req.payload.update({
       collection: 'sections',
       id: sectionId,
@@ -96,7 +100,7 @@ export const Chapters: CollectionConfig = {
 
         await syncSectionChapters({
           req,
-          chapterId: doc.id,
+          chapterId: toId(doc.id),
           nextSectionIds: sectionIdsFromRows(doc.sections),
           previousSectionIds: sectionIdsFromRows(previousDoc?.sections),
         })
