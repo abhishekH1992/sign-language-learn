@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
+import { getLessonImageUrl } from '@/lib/lesson-image'
 import { PracticeClient } from './PracticeClient'
 
 type Props = { params: Promise<{ id: string }> }
@@ -11,7 +12,7 @@ export default async function PracticePage({ params }: Props) {
 
   let lesson
   try {
-    lesson = await payload.findByID({ collection: 'lessons', id })
+    lesson = await payload.findByID({ collection: 'lessons', id, depth: 1 })
   } catch {
     notFound()
   }
@@ -33,7 +34,7 @@ export default async function PracticePage({ params }: Props) {
           lessonId={String(lesson.id)}
           lessonName={lesson.name}
           maoriName={lesson.maoriName || ''}
-          drawingUrl={lesson.drawingUrl || ''}
+          imageUrl={getLessonImageUrl(lesson.image)}
         />
       </section>
     </div>

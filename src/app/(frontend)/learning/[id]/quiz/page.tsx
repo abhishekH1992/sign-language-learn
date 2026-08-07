@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
+import { getLessonImageUrl } from '@/lib/lesson-image'
 import { QuizForm } from './QuizForm'
 
 type Props = { params: Promise<{ id: string }> }
@@ -11,7 +12,7 @@ export default async function QuizPage({ params }: Props) {
 
   let lesson
   try {
-    lesson = await payload.findByID({ collection: 'lessons', id })
+    lesson = await payload.findByID({ collection: 'lessons', id, depth: 1 })
   } catch {
     notFound()
   }
@@ -44,7 +45,7 @@ export default async function QuizPage({ params }: Props) {
           lessonId={String(lesson.id)}
           quizId={String(quiz.id)}
           questions={questions}
-          drawingUrl={lesson.drawingUrl || ''}
+          imageUrl={getLessonImageUrl(lesson.image)}
           lessonName={lesson.name}
         />
       </section>

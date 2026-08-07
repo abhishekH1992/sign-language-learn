@@ -57,21 +57,6 @@ export async function POST(request: Request) {
     wrongTips,
   })
 
-  await payload.create({
-    collection: 'quiz-attempts',
-    data: {
-      user: user.id,
-      quiz: quiz.id,
-      score,
-      maxScore,
-      answers: body.answers,
-      aiFeedback: feedback.usedOpenAI ? feedback.feedback : undefined,
-      fallbackFeedback: feedback.fallback,
-      completedAt: new Date().toISOString(),
-    },
-    overrideAccess: true,
-  })
-
   const passed = maxScore > 0 && score / maxScore >= 0.6
   await upsertLessonProgress(payload, user, lesson.id, {
     quizPassed: passed,

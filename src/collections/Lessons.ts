@@ -4,19 +4,21 @@ export const Lessons: CollectionConfig = {
   slug: 'lessons',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'nzslId', 'chapter', 'wordClass', 'published'],
+    defaultColumns: ['name', 'wordClass', 'published', 'sortOrder'],
   },
   access: {
     read: () => true,
   },
+  hooks: {
+    beforeValidate: [
+      ({ data }) => {
+        if (!data?.image) return data
+        data.image.source = data.image.media ? 'upload' : 'url'
+        return data
+      },
+    ],
+  },
   fields: [
-    {
-      name: 'nzslId',
-      type: 'number',
-      required: true,
-      unique: true,
-      index: true,
-    },
     {
       name: 'name',
       type: 'text',
@@ -40,26 +42,44 @@ export const Lessons: CollectionConfig = {
     {
       name: 'videoUrl',
       type: 'text',
-      required: true,
     },
     {
-      name: 'drawingUrl',
-      type: 'text',
+      name: 'image',
+      type: 'group',
+      label: 'Image',
+      admin: {
+        description:
+          'Upload a file to Media, or paste an external image link. Upload takes priority if both are set.',
+      },
+      fields: [
+        {
+          name: 'media',
+          type: 'upload',
+          relationTo: 'media',
+          label: 'Upload',
+        },
+        {
+          name: 'url',
+          type: 'text',
+          label: 'External link',
+        },
+        {
+          name: 'source',
+          type: 'select',
+          defaultValue: 'url',
+          options: [
+            { label: 'Upload', value: 'upload' },
+            { label: 'External link', value: 'url' },
+          ],
+          admin: {
+            hidden: true,
+          },
+        },
+      ],
     },
     {
       name: 'instructions',
       type: 'textarea',
-    },
-    {
-      name: 'chapter',
-      type: 'relationship',
-      relationTo: 'chapters',
-      required: true,
-    },
-    {
-      name: 'section',
-      type: 'relationship',
-      relationTo: 'sections',
     },
     {
       name: 'sortOrder',

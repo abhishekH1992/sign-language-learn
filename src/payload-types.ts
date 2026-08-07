@@ -74,8 +74,6 @@ export interface Config {
     lessons: Lesson;
     quizzes: Quiz;
     'lesson-progress': LessonProgress;
-    'quiz-attempts': QuizAttempt;
-    'practice-attempts': PracticeAttempt;
     notifications: Notification;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -91,8 +89,6 @@ export interface Config {
     lessons: LessonsSelect<false> | LessonsSelect<true>;
     quizzes: QuizzesSelect<false> | QuizzesSelect<true>;
     'lesson-progress': LessonProgressSelect<false> | LessonProgressSelect<true>;
-    'quiz-attempts': QuizAttemptsSelect<false> | QuizAttemptsSelect<true>;
-    'practice-attempts': PracticeAttemptsSelect<false> | PracticeAttemptsSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -194,6 +190,15 @@ export interface Chapter {
   description?: string | null;
   sortOrder: number;
   published?: boolean | null;
+  /**
+   * Note: When removing a section, remove the entire entry.
+   */
+  sections?:
+    | {
+        section: number | Section;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -205,8 +210,20 @@ export interface Section {
   id: number;
   title: string;
   slug: string;
-  chapter: number | Chapter;
+  /**
+   * A section can belong to multiple chapters.
+   */
+  chapters: (number | Chapter)[];
   sortOrder: number;
+  /**
+   * Note: When removing a lesson, remove the entire entry.
+   */
+  lessons?:
+    | {
+        lesson: number | Lesson;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -216,7 +233,6 @@ export interface Section {
  */
 export interface Lesson {
   id: number;
-  nzslId: number;
   name: string;
   secondaryName?: string | null;
   maoriName?: string | null;
@@ -224,11 +240,16 @@ export interface Lesson {
    * e.g. noun, verb, adjective
    */
   wordClass?: string | null;
-  videoUrl: string;
-  drawingUrl?: string | null;
+  videoUrl?: string | null;
+  /**
+   * Upload a file to Media, or paste an external image link. Upload takes priority if both are set.
+   */
+  image?: {
+    media?: (number | null) | Media;
+    url?: string | null;
+    source?: ('upload' | 'url') | null;
+  };
   instructions?: string | null;
-  chapter: number | Chapter;
-  section?: (number | null) | Section;
   sortOrder: number;
   published?: boolean | null;
   updatedAt: string;
@@ -269,54 +290,6 @@ export interface LessonProgress {
   quizPassed?: boolean | null;
   bestQuizScore?: number | null;
   lastActivityAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "quiz-attempts".
- */
-export interface QuizAttempt {
-  id: number;
-  user: number | User;
-  quiz: number | Quiz;
-  score: number;
-  maxScore: number;
-  answers:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  aiFeedback?: string | null;
-  fallbackFeedback?: string | null;
-  completedAt: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "practice-attempts".
- */
-export interface PracticeAttempt {
-  id: number;
-  user: number | User;
-  lesson: number | Lesson;
-  score: number;
-  signalCodes:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  aiFeedback?: string | null;
-  completedAt: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -385,14 +358,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'lesson-progress';
         value: number | LessonProgress;
-      } | null)
-    | ({
-        relationTo: 'quiz-attempts';
-        value: number | QuizAttempt;
-      } | null)
-    | ({
-        relationTo: 'practice-attempts';
-        value: number | PracticeAttempt;
       } | null)
     | ({
         relationTo: 'notifications';
@@ -493,6 +458,12 @@ export interface ChaptersSelect<T extends boolean = true> {
   description?: T;
   sortOrder?: T;
   published?: T;
+  sections?:
+    | T
+    | {
+        section?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -503,8 +474,14 @@ export interface ChaptersSelect<T extends boolean = true> {
 export interface SectionsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
-  chapter?: T;
+  chapters?: T;
   sortOrder?: T;
+  lessons?:
+    | T
+    | {
+        lesson?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -513,16 +490,19 @@ export interface SectionsSelect<T extends boolean = true> {
  * via the `definition` "lessons_select".
  */
 export interface LessonsSelect<T extends boolean = true> {
-  nzslId?: T;
   name?: T;
   secondaryName?: T;
   maoriName?: T;
   wordClass?: T;
   videoUrl?: T;
-  drawingUrl?: T;
+  image?:
+    | T
+    | {
+        media?: T;
+        url?: T;
+        source?: T;
+      };
   instructions?: T;
-  chapter?: T;
-  section?: T;
   sortOrder?: T;
   published?: T;
   updatedAt?: T;
@@ -565,36 +545,6 @@ export interface LessonProgressSelect<T extends boolean = true> {
   quizPassed?: T;
   bestQuizScore?: T;
   lastActivityAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "quiz-attempts_select".
- */
-export interface QuizAttemptsSelect<T extends boolean = true> {
-  user?: T;
-  quiz?: T;
-  score?: T;
-  maxScore?: T;
-  answers?: T;
-  aiFeedback?: T;
-  fallbackFeedback?: T;
-  completedAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "practice-attempts_select".
- */
-export interface PracticeAttemptsSelect<T extends boolean = true> {
-  user?: T;
-  lesson?: T;
-  score?: T;
-  signalCodes?: T;
-  aiFeedback?: T;
-  completedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

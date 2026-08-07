@@ -10,8 +10,6 @@ import { Lessons } from './collections/Lessons'
 import { LessonProgress } from './collections/LessonProgress'
 import { Media } from './collections/Media'
 import { Notifications } from './collections/Notifications'
-import { PracticeAttempts } from './collections/PracticeAttempts'
-import { QuizAttempts } from './collections/QuizAttempts'
 import { Quizzes } from './collections/Quizzes'
 import { Sections } from './collections/Sections'
 import { Users } from './collections/Users'
@@ -38,8 +36,6 @@ export default buildConfig({
     Lessons,
     Quizzes,
     LessonProgress,
-    QuizAttempts,
-    PracticeAttempts,
     Notifications,
   ],
   editor: lexicalEditor(),

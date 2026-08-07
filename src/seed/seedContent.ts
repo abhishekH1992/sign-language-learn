@@ -48,26 +48,25 @@ function loadFixture(): SeedFixture {
 
 function buildQuizQuestions(lesson: SeedFixture['lessons'][number], pool: SeedFixture['lessons']) {
   const distractors = pool
-    .filter((item) => item.nzslId !== lesson.nzslId)
-    .sort((a, b) => a.nzslId - b.nzslId)
+    .filter((item) => item.name !== lesson.name)
+    .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, 2)
 
   while (distractors.length < 2 && pool.length > distractors.length + 1) {
     const extra = pool.find(
-      (item) => item.nzslId !== lesson.nzslId && !distractors.some((d) => d.nzslId === item.nzslId),
+      (item) => item.name !== lesson.name && !distractors.some((d) => d.name === item.name),
     )
     if (!extra) break
     distractors.push(extra)
   }
 
   const choices = [lesson.name, ...distractors.map((d) => d.name)].slice(0, 3)
-  const correctIndex = 0
 
   return [
     {
       prompt: `Which gloss matches the sign for “${lesson.name}”?`,
       choices: choices.map((label) => ({ label })),
-      correctIndex,
+      correctIndex: 0,
       tip: `Remember: ${lesson.name}${lesson.maoriName ? ` (${lesson.maoriName})` : ''} is a ${lesson.wordClass || 'sign'}.`,
     },
     {
@@ -106,6 +105,7 @@ export async function seedContent(payload: Payload): Promise<void> {
         published: true,
       },
       overrideAccess: true,
+      context: { skipSectionChapterSync: true },
     })
     chapterId = updated.id
   } else {
@@ -116,28 +116,64 @@ export async function seedContent(payload: Payload): Promise<void> {
         published: true,
       },
       overrideAccess: true,
+      context: { skipSectionChapterSync: true },
     })
     chapterId = created.id
   }
 
+  const sectionSlug = `${fixture.chapter.slug}-core`
+  const existingSection = await payload.find({
+    collection: 'sections',
+    where: { slug: { equals: sectionSlug } },
+    limit: 1,
+    overrideAccess: true,
+  })
+
+  let sectionId: number | string
+  if (existingSection.docs[0]) {
+    const updated = await payload.update({
+      collection: 'sections',
+      id: existingSection.docs[0].id,
+      data: {
+        title: 'Core signs',
+        chapters: [chapterId],
+        sortOrder: 1,
+      },
+      overrideAccess: true,
+    })
+    sectionId = updated.id
+  } else {
+    const created = await payload.create({
+      collection: 'sections',
+      data: {
+        title: 'Core signs',
+        slug: sectionSlug,
+        chapters: [chapterId],
+        sortOrder: 1,
+      },
+      overrideAccess: true,
+    })
+    sectionId = created.id
+  }
+
+  const lessonIds: Array<number | string> = []
+
   for (const [index, lesson] of fixture.lessons.entries()) {
     const existing = await payload.find({
       collection: 'lessons',
-      where: { nzslId: { equals: lesson.nzslId } },
+      where: { name: { equals: lesson.name } },
       limit: 1,
       overrideAccess: true,
     })
 
     const lessonData = {
-      nzslId: lesson.nzslId,
       name: lesson.name,
       secondaryName: lesson.secondaryName || undefined,
       maoriName: lesson.maoriName || undefined,
       wordClass: lesson.wordClass || undefined,
-      videoUrl: lesson.videoUrl,
-      drawingUrl: lesson.drawingUrl || undefined,
+      videoUrl: lesson.videoUrl || undefined,
+      image: lesson.drawingUrl ? { url: lesson.drawingUrl, source: 'url' as const } : undefined,
       instructions: `Watch the NZSL sign for “${lesson.name}”. Notice handshape and movement, then practise and take the quiz. You can retake the quiz anytime.`,
-      chapter: chapterId,
       sortOrder: index + 1,
       published: true,
     }
@@ -159,6 +195,8 @@ export async function seedContent(payload: Payload): Promise<void> {
       })
       lessonId = created.id
     }
+
+    lessonIds.push(lessonId)
 
     const existingQuiz = await payload.find({
       collection: 'quizzes',
@@ -189,8 +227,26 @@ export async function seedContent(payload: Payload): Promise<void> {
     }
   }
 
+  await payload.update({
+    collection: 'sections',
+    id: sectionId,
+    data: {
+      lessons: lessonIds.map((lesson) => ({ lesson })),
+    },
+    overrideAccess: true,
+  })
+
+  await payload.update({
+    collection: 'chapters',
+    id: chapterId,
+    data: {
+      sections: [{ section: sectionId }],
+    },
+    overrideAccess: true,
+  })
+
   payload.logger.info(
-    `Seeded chapter “${fixture.chapter.title}” with ${fixture.lessons.length} lessons (idempotent).`,
+    `Seeded chapter “${fixture.chapter.title}” with 1 section and ${fixture.lessons.length} lessons (idempotent).`,
   )
 }
 

@@ -47,7 +47,7 @@ Open:
 
 Demo logins: `learner@example.com` / `password123`, `admin@example.com` / `password123`
 
-Content seeds automatically on app init from `dumps/numberblock.html` (idempotent by `nzslId`). You can also run `npm run seed`.
+Content seeds automatically on app init from `dumps/numberblock.html` (idempotent by lesson `name`). You can also run `npm run seed`.
 
 ### Practice logs
 
