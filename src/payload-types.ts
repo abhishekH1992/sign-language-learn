@@ -75,6 +75,7 @@ export interface Config {
     quizzes: Quiz;
     'lesson-progress': LessonProgress;
     notifications: Notification;
+    feedback: Feedback;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -90,6 +91,7 @@ export interface Config {
     quizzes: QuizzesSelect<false> | QuizzesSelect<true>;
     'lesson-progress': LessonProgressSelect<false> | LessonProgressSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
+    feedback: FeedbackSelect<false> | FeedbackSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -312,6 +314,37 @@ export interface Notification {
   createdAt: string;
 }
 /**
+ * Community and learner feedback (general or lesson-specific).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "feedback".
+ */
+export interface Feedback {
+  id: number;
+  /**
+   * Learner who submitted the feedback.
+   */
+  user: number | User;
+  /**
+   * Optional — set when feedback is about a specific lesson.
+   */
+  lesson?: (number | null) | Lesson;
+  /**
+   * Optional — section context for the lesson.
+   */
+  section?: (number | null) | Section;
+  /**
+   * Optional — chapter context for the lesson.
+   */
+  chapter?: (number | null) | Chapter;
+  /**
+   * Feedback text from the learner or community.
+   */
+  feedback: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -366,6 +399,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'notifications';
         value: number | Notification;
+      } | null)
+    | ({
+        relationTo: 'feedback';
+        value: number | Feedback;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -563,6 +600,19 @@ export interface NotificationsSelect<T extends boolean = true> {
   body?: T;
   type?: T;
   read?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "feedback_select".
+ */
+export interface FeedbackSelect<T extends boolean = true> {
+  user?: T;
+  lesson?: T;
+  section?: T;
+  chapter?: T;
+  feedback?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -6,6 +6,8 @@ export type LessonNav = {
   lessonsListHref: string
   /** Lesson page URL for the next lesson in the section, or null if this was the last. */
   nextLessonHref: string | null
+  chapterId: number | string | null
+  sectionId: number | string | null
 }
 
 function findLessonContext(chapters: Chapter[], lessonId: number | string) {
@@ -46,6 +48,8 @@ export async function getLessonNav(
     return {
       lessonsListHref,
       nextLessonHref: next ? `/learning/${next.id}` : null,
+      chapterId: chapter.id,
+      sectionId: section.id,
     }
   }
 
@@ -54,11 +58,18 @@ export async function getLessonNav(
       return {
         lessonsListHref: `/learning/chapter/${chapter.id}`,
         nextLessonHref: null,
+        chapterId: chapter.id,
+        sectionId: null,
       }
     }
   }
 
-  return { lessonsListHref: '/learning', nextLessonHref: null }
+  return {
+    lessonsListHref: '/learning',
+    nextLessonHref: null,
+    chapterId: null,
+    sectionId: null,
+  }
 }
 
 /** Find the section (and chapter) that contains a lesson for back-navigation. */

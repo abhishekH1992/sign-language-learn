@@ -36,9 +36,10 @@ export default async function PracticePage({ params }: Props) {
 
   return (
     <div className="shell stack">
-      <p>
+      <div className="btn-row" style={{ justifyContent: 'space-between' }}>
         <Link href={nav.lessonsListHref}>← Lessons</Link>
-      </p>
+        <Link href={`/feedback?lesson=${lesson.id}`}>Give feedback</Link>
+      </div>
       <header>
         <h1 className="section-title">Practice: {lesson.name}</h1>
         <p className="lede muted">
