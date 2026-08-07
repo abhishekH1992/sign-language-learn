@@ -1,12 +1,15 @@
 import type { Payload } from 'payload'
 
-import { ALPHABET_LETTERS, seedAlphabetMedia } from './seedAlphabetMedia'
+import { ALPHABET_LETTERS } from './seedAlphabetMedia'
 
 const ALPHABET_VIDEO_URL = 'https://www.youtube.com/watch?v=TH-xNQ7WE0E'
 
-export async function seedContent(payload: Payload): Promise<void> {
-  const mediaByLetter = await seedAlphabetMedia(payload)
+/** Served from `public/alphabet` so images work on Vercel without blob storage. */
+function alphabetImageUrl(letter: string) {
+  return `/alphabet/${letter}.png`
+}
 
+export async function seedContent(payload: Payload): Promise<void> {
   const existingChapter = await payload.find({
     collection: 'chapters',
     where: { slug: { equals: 'basics' } },
@@ -83,7 +86,6 @@ export async function seedContent(payload: Payload): Promise<void> {
 
   for (const [index, letter] of ALPHABET_LETTERS.entries()) {
     const name = letter
-    const mediaId = Number(mediaByLetter[letter])
 
     const existing = await payload.find({
       collection: 'lessons',
@@ -97,8 +99,9 @@ export async function seedContent(payload: Payload): Promise<void> {
       wordClass: 'letter',
       videoUrl: ALPHABET_VIDEO_URL,
       image: {
-        source: 'upload' as const,
-        media: mediaId,
+        source: 'url' as const,
+        url: alphabetImageUrl(letter),
+        media: null,
       },
       instructions: `Learn the handshape for the letter “${letter}”. Watch the video, then practise it.`,
       sortOrder: index + 1,
