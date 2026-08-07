@@ -574,6 +574,19 @@ a.btn-secondary:focus-visible {
   background: #e8efea;
 }
 
+.lesson-row .badge {
+  text-decoration: none;
+}
+
+.lesson-row-end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  justify-self: end;
+}
+
 .upcoming-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -650,6 +663,24 @@ a.btn-secondary:focus-visible {
   background: #eef2f0;
   color: var(--ink-muted);
   border-color: var(--line);
+}
+
+.badge-score-high {
+  background: rgba(11, 110, 79, 0.12);
+  color: #0b6e4f;
+  border-color: #0b6e4f;
+}
+
+.badge-score-mid {
+  background: rgba(183, 121, 31, 0.14);
+  color: #b7791f;
+  border-color: #b7791f;
+}
+
+.badge-score-low {
+  background: rgba(180, 35, 24, 0.1);
+  color: #b42318;
+  border-color: #b42318;
 }
 
 .video-stage {
@@ -810,7 +841,8 @@ a.btn-secondary:focus-visible {
     grid-template-columns: 72px 1fr;
   }
 
-  .lesson-row:not(.upcoming-card) .badge {
+  .lesson-row:not(.upcoming-card) .lesson-row-end,
+  .lesson-row:not(.upcoming-card) > .badge {
     grid-column: 1 / -1;
     justify-self: start;
   }

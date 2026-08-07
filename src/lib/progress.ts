@@ -9,6 +9,7 @@ export async function upsertLessonProgress(
     practiceDone?: boolean
     quizPassed?: boolean
     bestQuizScore?: number
+    bestPracticeScore?: number
     status?: 'not_started' | 'in_progress' | 'completed'
   },
 ) {
@@ -26,15 +27,17 @@ export async function upsertLessonProgress(
   const practiceDone = patch.practiceDone ?? current?.practiceDone ?? false
   const quizPassed = patch.quizPassed ?? current?.quizPassed ?? false
   const bestQuizScore = Math.max(patch.bestQuizScore ?? 0, current?.bestQuizScore ?? 0)
+  const bestPracticeScore = Math.max(
+    patch.bestPracticeScore ?? 0,
+    current?.bestPracticeScore ?? 0,
+  )
 
   let status = patch.status
-  if (quizPassed && videoWatched) {
+  if (patch.status === 'completed' || (quizPassed && videoWatched)) {
     status = 'completed'
   } else if (!status) {
     if (videoWatched || practiceDone || quizPassed) status = 'in_progress'
     else status = 'not_started'
-  } else if (status === 'in_progress' && quizPassed && videoWatched) {
-    status = 'completed'
   }
 
   const data = {
@@ -44,6 +47,7 @@ export async function upsertLessonProgress(
     practiceDone,
     quizPassed,
     bestQuizScore,
+    bestPracticeScore,
     status,
     lastActivityAt: new Date().toISOString(),
   }

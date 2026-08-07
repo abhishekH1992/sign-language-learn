@@ -2,13 +2,14 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
 import { getLessonImageUrl } from '@/lib/lesson-image'
+import { getLessonNav } from '@/lib/lesson-nav'
 import { PracticeClient } from './PracticeClient'
 
 type Props = { params: Promise<{ id: string }> }
 
 export default async function PracticePage({ params }: Props) {
   const { id } = await params
-  const { payload } = await requireUser()
+  const { payload, user } = await requireUser()
 
   let lesson
   try {
@@ -17,10 +18,26 @@ export default async function PracticePage({ params }: Props) {
     notFound()
   }
 
+  const [nav, progress] = await Promise.all([
+    getLessonNav(payload, lesson.id),
+    payload.find({
+      collection: 'lesson-progress',
+      where: {
+        and: [{ user: { equals: user!.id } }, { lesson: { equals: lesson.id } }],
+      },
+      limit: 1,
+      depth: 0,
+    }),
+  ])
+
+  const pastScore = progress.docs[0]?.bestPracticeScore
+  const pastScoreValue =
+    typeof pastScore === 'number' && pastScore > 0 ? pastScore : null
+
   return (
     <div className="shell stack">
       <p>
-        <Link href={`/learning/${lesson.id}`}>← {lesson.name}</Link>
+        <Link href={nav.lessonsListHref}>← Lessons</Link>
       </p>
       <header>
         <h1 className="section-title">Practice: {lesson.name}</h1>
@@ -35,6 +52,9 @@ export default async function PracticePage({ params }: Props) {
           lessonName={lesson.name}
           maoriName={lesson.maoriName || ''}
           imageUrl={getLessonImageUrl(lesson.image)}
+          lessonsListHref={nav.lessonsListHref}
+          nextLessonHref={nav.nextLessonHref}
+          pastScore={pastScoreValue}
         />
       </section>
     </div>

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
 import { getLessonImageUrl } from '@/lib/lesson-image'
 import { publishedLessons } from '@/lib/hierarchy-progress'
+import { scoreBadgeClass } from '@/lib/hand-landmarks'
 import { paginate, parsePage } from '@/lib/pagination'
 import { Pagination } from '@/components/ui/Pagination'
 
@@ -29,7 +30,7 @@ export default async function SectionLearningPage({ params, searchParams }: Prop
 
   const progress = await payload.find({
     collection: 'lesson-progress',
-    where: { user: { equals: user.id } },
+    where: { user: { equals: user!.id } },
     limit: 500,
     depth: 0,
   })
@@ -78,10 +79,15 @@ export default async function SectionLearningPage({ params, searchParams }: Prop
           <>
             <ul className="list learning-nav-list">
               {slice.items.map((lesson) => {
-                const done = progressByLesson.get(String(lesson.id))?.status === 'completed'
+                const state = progressByLesson.get(String(lesson.id))
+                const done = state?.status === 'completed'
+                const practiceScore =
+                  typeof state?.bestPracticeScore === 'number' ? state.bestPracticeScore : 0
+                const scoreLabel = Number(practiceScore.toFixed(1))
+
                 return (
                   <li key={lesson.id}>
-                    <Link className="lesson-row" href={`/learning/${lesson.id}`}>
+                    <div className="lesson-row">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={getLessonImageUrl(lesson.image, '/placeholder-sign.svg')}
@@ -90,15 +96,31 @@ export default async function SectionLearningPage({ params, searchParams }: Prop
                         height={66}
                       />
                       <div>
-                        <strong>{lesson.name}</strong>
+                        <strong>
+                          <Link href={`/learning/${lesson.id}`}>{lesson.name}</Link>
+                        </strong>
                         <div className="muted">
                           {lesson.maoriName || '—'} · {lesson.wordClass || 'sign'}
                         </div>
                       </div>
-                      <span className={`badge ${done ? 'badge-ok' : 'badge-neutral'}`}>
-                        {done ? '✓ Completed' : 'Continue →'}
-                      </span>
-                    </Link>
+                      {done ? (
+                        <div className="lesson-row-end">
+                          <span className={`badge ${scoreBadgeClass(practiceScore)}`}>
+                            Completed · {scoreLabel}%
+                          </span>
+                          <Link
+                            className="badge badge-neutral"
+                            href={`/learning/${lesson.id}/practice`}
+                          >
+                            Retry →
+                          </Link>
+                        </div>
+                      ) : (
+                        <Link className="badge badge-neutral" href={`/learning/${lesson.id}`}>
+                          Continue →
+                        </Link>
+                      )}
+                    </div>
                   </li>
                 )
               })}
