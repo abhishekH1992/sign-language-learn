@@ -36,6 +36,7 @@ export function SiteHeader({ email }: Props) {
           <>
             {item('/dashboard', 'Dashboard')}
             {item('/learning', 'Learning')}
+            {item('/feedback', 'Feedback')}
             {item('/settings', 'Settings')}
             <span className="muted" style={{ paddingInline: '0.5rem' }}>
               {email}

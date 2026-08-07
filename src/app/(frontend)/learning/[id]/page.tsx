@@ -32,9 +32,10 @@ export default async function LessonPage({ params }: Props) {
 
   return (
     <div className="shell stack">
-      <p>
+      <div className="btn-row" style={{ justifyContent: 'space-between' }}>
         <Link href="/learning">← Learning</Link>
-      </p>
+        <Link href={`/feedback?lesson=${lesson.id}`}>Give feedback</Link>
+      </div>
       <header>
         <div className="btn-row" style={{ marginBottom: '0.75rem' }}>
           <span className="badge badge-neutral">{lesson.wordClass || 'lesson'}</span>
@@ -67,6 +68,9 @@ export default async function LessonPage({ params }: Props) {
               Take quiz
             </Button>
           ) : null}
+          <Button href={`/feedback?lesson=${lesson.id}`} variant="secondary">
+            Give feedback
+          </Button>
         </div>
         <p className="muted" style={{ marginTop: '0.75rem' }}>
           Signed in as {user && 'email' in user ? user.email : 'learner'}.

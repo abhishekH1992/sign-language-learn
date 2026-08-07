@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 import { Chapters } from './collections/Chapters'
+import { Feedback } from './collections/Feedback'
 import { Lessons } from './collections/Lessons'
 import { LessonProgress } from './collections/LessonProgress'
 import { Media } from './collections/Media'
@@ -36,6 +37,7 @@ export default buildConfig({
     Quizzes,
     LessonProgress,
     Notifications,
+    Feedback,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
