@@ -28,7 +28,7 @@ export function fallbackQuizFeedback(input: QuizFeedbackInput): string {
 
   const tipBit = input.wrongTips.length
     ? ` Focus next on: ${input.wrongTips.slice(0, 2).join(' ')}`
-    : ' Rewatch the lesson video and try the quiz again — retakes are unlimited.'
+    : ' Rewatch the lesson video and try the quiz again.'
 
   return `You scored ${input.score}/${input.maxScore} on “${input.lessonName}”.${tipBit}`
 }
@@ -37,9 +37,24 @@ export function fallbackPracticeFeedback(input: PracticeFeedbackInput): string {
   const signals = input.signalCodes.length
     ? input.signalCodes
         .map((code) => {
-          if (code === 'hand_not_in_frame') return 'Keep your hand fully visible in the camera frame.'
-          if (code === 'low_confidence') return 'Hold the handshape steady for a moment so we can read it clearly.'
-          if (code === 'shape_mismatch') return 'Compare your fingers to the lesson drawing and adjust the handshape.'
+          if (code === 'hand_not_in_frame') {
+            return 'Keep your hands fully visible in the camera frame.'
+          }
+          if (code === 'need_both_hands') {
+            return 'NZSL fingerspelling uses two hands — bring your second hand into view.'
+          }
+          if (code === 'low_confidence') {
+            return 'Hold the handshape steady for a moment so we can read it clearly.'
+          }
+          if (code === 'shape_close') {
+            return 'You are close — fine-tune finger positions to match the lesson drawing.'
+          }
+          if (code === 'shape_mismatch') {
+            return 'Compare your fingers to the lesson drawing and adjust the handshape.'
+          }
+          if (code === 'stable_hand') {
+            return 'Nice clear handshape — keep practising slowly.'
+          }
           return code.replaceAll('_', ' ')
         })
         .join(' ')
