@@ -1,27 +1,34 @@
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
 import { getLessonImageUrl } from '@/lib/lesson-image'
+import {
+  computeHierarchyProgress,
+  getInProgressChapters,
+  hasAnyProgress,
+} from '@/lib/hierarchy-progress'
+import { ProgressStatCards } from '@/components/ui/ProgressStatCards'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Button } from '@/components/ui/Button'
+import type { Lesson } from '@/payload-types'
 
 const UPCOMING_LIMIT = 3
 
 export default async function DashboardPage() {
   const { payload, user } = await requireUser()
 
-  const [lessons, progress, notifications] = await Promise.all([
+  const [chapters, progress, notifications] = await Promise.all([
     payload.find({
-      collection: 'lessons',
+      collection: 'chapters',
       where: { published: { equals: true } },
-      limit: 200,
       sort: 'sortOrder',
-      depth: 1,
+      limit: 50,
+      depth: 3,
     }),
     payload.find({
       collection: 'lesson-progress',
       where: { user: { equals: user.id } },
       limit: 200,
-      depth: 1,
+      depth: 0,
     }),
     payload.find({
       collection: 'notifications',
@@ -31,13 +38,33 @@ export default async function DashboardPage() {
     }),
   ])
 
-  const completed = progress.docs.filter((item) => item.status === 'completed').length
   const progressByLesson = new Map(
-    progress.docs.map((item) => [typeof item.lesson === 'object' ? item.lesson.id : item.lesson, item]),
+    progress.docs.map((item) => [
+      String(typeof item.lesson === 'object' ? item.lesson.id : item.lesson),
+      item,
+    ]),
   )
 
-  const remaining = lessons.docs.filter(
-    (lesson) => progressByLesson.get(lesson.id)?.status !== 'completed',
+  const learnerHasProgress = hasAnyProgress(progressByLesson)
+  const hierarchyProgress = computeHierarchyProgress(chapters.docs, progressByLesson)
+  const inProgressChapters = learnerHasProgress
+    ? getInProgressChapters(chapters.docs, progressByLesson)
+    : []
+
+  const publishedLessons: Lesson[] = []
+  for (const chapter of chapters.docs) {
+    for (const row of chapter.sections || []) {
+      const section = typeof row.section === 'object' ? row.section : null
+      if (!section || typeof section !== 'object') continue
+      for (const lessonRow of section.lessons || []) {
+        const lesson = typeof lessonRow.lesson === 'object' ? (lessonRow.lesson as Lesson) : null
+        if (lesson?.published) publishedLessons.push(lesson)
+      }
+    }
+  }
+
+  const remaining = publishedLessons.filter(
+    (lesson) => progressByLesson.get(String(lesson.id))?.status !== 'completed',
   )
   const upcoming = remaining.slice(0, UPCOMING_LIMIT)
   const showBrowseAll = remaining.length > UPCOMING_LIMIT
@@ -51,12 +78,47 @@ export default async function DashboardPage() {
         <p className="lede muted">See your progress, upcoming lessons, and notifications.</p>
       </header>
 
-      <section className="panel" aria-labelledby="progress-heading">
-        <h2 id="progress-heading" className="section-title" style={{ fontSize: '1.5rem' }}>
-          Progress
-        </h2>
-        <ProgressBar value={completed} max={lessons.totalDocs || 1} label="Lessons completed" />
-      </section>
+      {learnerHasProgress ? (
+        <section className="panel" aria-labelledby="progress-heading">
+          <h2 id="progress-heading" className="section-title" style={{ fontSize: '1.5rem' }}>
+            Progress
+          </h2>
+          <ProgressStatCards progress={hierarchyProgress} />
+        </section>
+      ) : null}
+
+      {inProgressChapters.length > 0 ? (
+        <section className="panel" aria-labelledby="continue-heading">
+          <h2 id="continue-heading" className="section-title" style={{ fontSize: '1.5rem' }}>
+            Continue learning
+          </h2>
+          <p className="muted" style={{ marginTop: '0.35rem' }}>
+            Chapters you have started and still need to finish.
+          </p>
+          <ul className="list continue-chapter-list">
+            {inProgressChapters.map((chapter) => (
+              <li key={chapter.id} className="continue-chapter-card">
+                <div className="continue-chapter-main">
+                  <div>
+                    <strong className="continue-chapter-title">{chapter.title}</strong>
+                    {chapter.description ? (
+                      <p className="muted continue-chapter-desc">{chapter.description}</p>
+                    ) : null}
+                  </div>
+                  <Button href={`/learning/${chapter.nextLessonId}`} variant="primary">
+                    Continue →
+                  </Button>
+                </div>
+                <ProgressBar
+                  value={chapter.done}
+                  max={chapter.total}
+                  label="Lessons completed"
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="panel" aria-labelledby="upcoming-heading">
         <h2 id="upcoming-heading" className="section-title" style={{ fontSize: '1.5rem' }}>
