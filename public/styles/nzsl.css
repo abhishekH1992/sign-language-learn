@@ -346,6 +346,54 @@ a:hover {
   background: #e8efea;
 }
 
+.upcoming-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.upcoming-card {
+  grid-template-columns: 96px 1fr;
+  grid-template-rows: auto auto;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.upcoming-card img {
+  width: 96px;
+  height: 100%;
+  min-height: 96px;
+  grid-row: 1 / span 2;
+  object-fit: contain;
+  border-radius: 0;
+  background: #f4f7f5;
+}
+
+.upcoming-card > div {
+  padding: var(--space-3) var(--space-3) var(--space-1);
+}
+
+.upcoming-card .badge {
+  grid-column: 2;
+  justify-self: start;
+  margin: 0 var(--space-3) var(--space-3);
+}
+
+@media (max-width: 960px) {
+  .upcoming-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .upcoming-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -393,6 +441,73 @@ a:hover {
   object-fit: contain;
   background: #0f1714;
   display: block;
+}
+
+.practice-stage {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  align-items: stretch;
+}
+
+.practice-stage-aside {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.score-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.score-card-label {
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.score-card-value {
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.score-reason-text {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--ink-muted);
+}
+
+@media (min-width: 761px) {
+  .practice-stage {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .practice-stage-video {
+    grid-column: span 9;
+    min-width: 0;
+  }
+
+  .practice-stage-aside {
+    grid-column: span 3;
+    min-width: 0;
+  }
+
+  .practice-stage-video .video-stage {
+    height: 100%;
+    min-height: 320px;
+  }
+
+  .score-card-value {
+    font-size: 1.75rem;
+  }
 }
 
 .video-controls {
@@ -463,11 +578,11 @@ a:hover {
 }
 
 @media (max-width: 720px) {
-  .lesson-row {
+  .lesson-row:not(.upcoming-card) {
     grid-template-columns: 72px 1fr;
   }
 
-  .lesson-row .badge {
+  .lesson-row:not(.upcoming-card) .badge {
     grid-column: 1 / -1;
     justify-self: start;
   }

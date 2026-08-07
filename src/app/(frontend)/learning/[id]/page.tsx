@@ -69,7 +69,7 @@ export default async function LessonPage({ params }: Props) {
           ) : null}
         </div>
         <p className="muted" style={{ marginTop: '0.75rem' }}>
-          Signed in as {user && 'email' in user ? user.email : 'learner'}. Retakes are unlimited.
+          Signed in as {user && 'email' in user ? user.email : 'learner'}.
         </p>
       </section>
     </div>

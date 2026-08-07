@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
+import { getLessonImageUrl } from '@/lib/lesson-image'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Button } from '@/components/ui/Button'
+
+const UPCOMING_LIMIT = 3
 
 export default async function DashboardPage() {
   const { payload, user } = await requireUser()
@@ -12,7 +15,7 @@ export default async function DashboardPage() {
       where: { published: { equals: true } },
       limit: 200,
       sort: 'sortOrder',
-      depth: 0,
+      depth: 1,
     }),
     payload.find({
       collection: 'lesson-progress',
@@ -33,9 +36,11 @@ export default async function DashboardPage() {
     progress.docs.map((item) => [typeof item.lesson === 'object' ? item.lesson.id : item.lesson, item]),
   )
 
-  const upcoming = lessons.docs
-    .filter((lesson) => progressByLesson.get(lesson.id)?.status !== 'completed')
-    .slice(0, 4)
+  const remaining = lessons.docs.filter(
+    (lesson) => progressByLesson.get(lesson.id)?.status !== 'completed',
+  )
+  const upcoming = remaining.slice(0, UPCOMING_LIMIT)
+  const showBrowseAll = remaining.length > UPCOMING_LIMIT
 
   return (
     <div className="shell stack">
@@ -60,22 +65,44 @@ export default async function DashboardPage() {
         {upcoming.length === 0 ? (
           <p className="muted">You have completed every published lesson. Ka pai!</p>
         ) : (
-          <ul className="list">
-            {upcoming.map((lesson) => (
-              <li key={lesson.id}>
-                <Link href={`/learning/${lesson.id}`}>
-                  → {lesson.name}
-                  {lesson.maoriName ? ` (${lesson.maoriName})` : ''}
-                </Link>
-              </li>
-            ))}
+          <ul className="list upcoming-list">
+            {upcoming.map((lesson) => {
+              const imageSrc = getLessonImageUrl(lesson.image, '/placeholder-sign.svg')
+              const isLetter =
+                lesson.wordClass === 'letter' ||
+                (lesson.name.length === 1 && /[A-Za-z]/.test(lesson.name))
+              const subtitleParts = [
+                lesson.maoriName ? `Māori: ${lesson.maoriName}` : null,
+                lesson.secondaryName ? `Also: ${lesson.secondaryName}` : null,
+                isLetter ? `Letter ${lesson.name.toUpperCase()} · fingerspelling` : null,
+                !isLetter && lesson.wordClass ? lesson.wordClass : null,
+              ].filter(Boolean)
+
+              return (
+                <li key={lesson.id}>
+                  <Link className="lesson-row upcoming-card" href={`/learning/${lesson.id}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={imageSrc} alt="" width={88} height={66} />
+                    <div>
+                      <strong>{lesson.name}</strong>
+                      <div className="muted">
+                        {subtitleParts.length > 0 ? subtitleParts.join(' · ') : 'Continue this lesson'}
+                      </div>
+                    </div>
+                    <span className="badge badge-neutral">Continue →</span>
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         )}
-        <div style={{ marginTop: '1rem' }}>
-          <Button href="/learning" variant="secondary">
-            Browse all lessons
-          </Button>
-        </div>
+        {showBrowseAll ? (
+          <div style={{ marginTop: '1rem' }}>
+            <Button href="/learning" variant="secondary">
+              Browse all lessons
+            </Button>
+          </div>
+        ) : null}
       </section>
 
       <section className="panel" aria-labelledby="notifications-heading">

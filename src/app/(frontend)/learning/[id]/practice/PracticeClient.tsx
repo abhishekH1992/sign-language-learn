@@ -4,6 +4,15 @@ import { useEffect, useRef, useState } from 'react'
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision'
 import { Button } from '@/components/ui/Button'
 import { StatusBanner } from '@/components/ui/StatusBanner'
+import {
+  combinedBoundingBox,
+  drawHandOverlay,
+  flattenHands,
+  scoreColor,
+  type Landmark,
+} from '@/lib/hand-landmarks'
+import { scoreHandLandmarks } from '@/lib/hand-score'
+import { basicScoreReason } from '@/lib/openai-feedback'
 
 type Props = {
   lessonId: string
@@ -22,13 +31,9 @@ type ScoreResult = {
   basis?: ScoreBasis
 }
 
-function flattenLandmarks(landmarks: Array<{ x: number; y: number; z: number }>) {
-  return landmarks.flatMap((point) => [point.x, point.y, point.z])
-}
-
-function logPractice(event: string, details?: Record<string, unknown>) {
-  console.info(`[NZSL practice] ${event}`, details ?? {})
-}
+const MEDIAPIPE_VERSION = '0.10.35'
+const SCORE_INTERVAL_MS = 350
+const NO_HAND_HOLD_MS = 280
 
 export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -36,16 +41,76 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
   const landmarkerRef = useRef<HandLandmarker | null>(null)
   const rafRef = useRef<number | null>(null)
   const lastScoreAt = useRef(0)
-  const lastLoggedSignals = useRef('')
+  const lastHandSeenAt = useRef(0)
+  const liveScoreRef = useRef(0)
+  const highScoreValueRef = useRef(0)
+  const scoreFrameRef = useRef<(landmarks: number[]) => Promise<void>>(async () => {})
   const [ready, setReady] = useState(false)
   const [error, setError] = useState('')
   const [liveScore, setLiveScore] = useState(0)
+  const [highScore, setHighScore] = useState(0)
+  const [highSignals, setHighSignals] = useState<string[]>(['waiting_for_hand'])
+  const [highBasis, setHighBasis] = useState<ScoreBasis | null>(null)
+  const [highScoreSource, setHighScoreSource] = useState<
+    'cv-service' | 'browser-fallback' | 'none'
+  >('none')
   const [signals, setSignals] = useState<string[]>(['waiting_for_hand'])
   const [basis, setBasis] = useState<ScoreBasis | null>(null)
   const [scoreSource, setScoreSource] = useState<'cv-service' | 'browser-fallback' | 'none'>('none')
   const [result, setResult] = useState<ScoreResult | null>(null)
   const [pending, setPending] = useState(false)
   const [cameraInfo, setCameraInfo] = useState('')
+  const [handCount, setHandCount] = useState(0)
+
+  useEffect(() => {
+    liveScoreRef.current = liveScore
+  }, [liveScore])
+
+  function applyScore(
+    score: number,
+    signalCodes: string[],
+    nextBasis: ScoreBasis | null,
+    source: 'cv-service' | 'browser-fallback',
+  ) {
+    setLiveScore(score)
+    setSignals(signalCodes)
+    setBasis(nextBasis)
+    setScoreSource(source)
+
+    if (score >= highScoreValueRef.current) {
+      highScoreValueRef.current = score
+      setHighScore(score)
+      setHighSignals(signalCodes)
+      setHighBasis(nextBasis)
+      setHighScoreSource(source)
+    }
+  }
+
+  async function scoreFrame(landmarks: number[]) {
+    const now = Date.now()
+    if (now - lastScoreAt.current < SCORE_INTERVAL_MS) return
+    lastScoreAt.current = now
+    try {
+      const cvUrl = process.env.NEXT_PUBLIC_CV_SERVICE_URL || 'http://127.0.0.1:8000'
+      const res = await fetch(`${cvUrl}/score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ landmarks, lessonName }),
+      })
+      if (!res.ok) throw new Error('cv unavailable')
+      const data = (await res.json()) as {
+        score: number
+        signalCodes: string[]
+        basis?: ScoreBasis
+      }
+      applyScore(data.score, data.signalCodes, data.basis || null, 'cv-service')
+    } catch {
+      const local = scoreHandLandmarks(landmarks, lessonName, 'browser_handshape_score')
+      applyScore(local.score, local.signalCodes, local.basis, 'browser-fallback')
+    }
+  }
+
+  scoreFrameRef.current = scoreFrame
 
   useEffect(() => {
     let stream: MediaStream | null = null
@@ -53,12 +118,6 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
 
     async function start() {
       try {
-        logPractice('requesting_camera', {
-          lessonId,
-          lessonName,
-          constraints: { facingMode: 'user', width: 640, height: 480, audio: false },
-        })
-
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user', width: 640, height: 480 },
           audio: false,
@@ -67,22 +126,15 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
 
         const track = stream.getVideoTracks()[0]
         const settings = track?.getSettings()
-        const info = `Camera open: ${track?.label || 'default'} · ${settings?.width || '?'}×${settings?.height || '?'}`
-        setCameraInfo(info)
-        logPractice('camera_open', {
-          lessonId,
-          lessonName,
-          label: track?.label,
-          settings,
-          trackReadyState: track?.readyState,
-        })
+        // setCameraInfo(
+        //   `Camera open: ${track?.label || 'default'} · ${settings?.width || '?'}×${settings?.height || '?'}`,
+        // )
 
         videoRef.current.srcObject = stream
         await videoRef.current.play()
-        logPractice('camera_preview_playing', { lessonName })
 
         const vision = await FilesetResolver.forVisionTasks(
-          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm',
+          `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`,
         )
         const landmarker = await HandLandmarker.createFromOptions(vision, {
           baseOptions: {
@@ -91,16 +143,13 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
             delegate: 'GPU',
           },
           runningMode: 'VIDEO',
-          numHands: 1,
+          numHands: 2,
+          minHandDetectionConfidence: 0.55,
+          minHandPresenceConfidence: 0.55,
+          minTrackingConfidence: 0.5,
         })
         landmarkerRef.current = landmarker
         setReady(true)
-        logPractice('mediapipe_ready', {
-          lessonName,
-          model: 'hand_landmarker float16',
-          feedbackBasis:
-            '21 hand landmarks → in-frame check + hand-span openness heuristic → signal codes → text feedback (OpenAI or local fallback)',
-        })
 
         const loop = () => {
           const video = videoRef.current
@@ -117,36 +166,63 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
             canvas.width = video.videoWidth
             canvas.height = video.videoHeight
             ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+            // Mirror selfie preview for natural UX
+            ctx.save()
+            ctx.translate(canvas.width, 0)
+            ctx.scale(-1, 1)
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-            const hand = detection.landmarks[0]
-            if (hand) {
-              ctx.fillStyle = '#0b6e4f'
-              for (const point of hand) {
-                ctx.beginPath()
-                ctx.arc(point.x * canvas.width, point.y * canvas.height, 4, 0, Math.PI * 2)
-                ctx.fill()
-              }
-              void scoreFrame(flattenLandmarks(hand))
-            } else {
-              const noHandBasis = {
-                method: 'mediapipe_hand_landmarks',
-                rule: 'no_hand_detected',
-                reason: 'MediaPipe did not detect a hand in this frame',
-              }
-              setSignals(['hand_not_in_frame'])
-              setLiveScore(0)
-              setBasis(noHandBasis)
-              setScoreSource('browser-fallback')
-              const key = 'hand_not_in_frame'
-              if (lastLoggedSignals.current !== key) {
-                lastLoggedSignals.current = key
-                logPractice('live_score', {
-                  lessonName,
-                  score: 0,
-                  signalCodes: ['hand_not_in_frame'],
-                  source: 'browser',
-                  basis: noHandBasis,
+            ctx.restore()
+
+            const hands = (detection.landmarks || []) as Landmark[][]
+            const color = scoreColor(liveScoreRef.current)
+
+            if (hands.length) {
+              lastHandSeenAt.current = Date.now()
+              setHandCount(hands.length)
+
+              hands.forEach((hand, index) => {
+                drawHandOverlay(ctx, hand, {
+                  width: canvas.width,
+                  height: canvas.height,
+                  color,
+                  label:
+                    index === 0
+                      ? `${lessonName} · ${Math.round(liveScoreRef.current)}%`
+                      : `Hand ${index + 1}`,
+                  mirror: true,
                 })
+              })
+
+              if (hands.length >= 2) {
+                const combined = combinedBoundingBox(hands)
+                if (combined) {
+                  const x = (1 - (combined.x + combined.w)) * canvas.width
+                  const y = combined.y * canvas.height
+                  const w = combined.w * canvas.width
+                  const h = combined.h * canvas.height
+                  ctx.strokeStyle = color
+                  ctx.setLineDash([8, 6])
+                  ctx.lineWidth = 2
+                  ctx.strokeRect(x, y, w, h)
+                  ctx.setLineDash([])
+                }
+              }
+
+              void scoreFrameRef.current(flattenHands(hands))
+            } else {
+              const held = Date.now() - lastHandSeenAt.current < NO_HAND_HOLD_MS
+              if (!held) {
+                setHandCount(0)
+                const noHandBasis = {
+                  method: 'mediapipe_hand_landmarks',
+                  rule: 'no_hand_detected',
+                  reason: 'MediaPipe did not detect a hand in this frame',
+                }
+                setSignals(['hand_not_in_frame'])
+                setLiveScore(0)
+                setBasis(noHandBasis)
+                setScoreSource('browser-fallback')
               }
             }
           }
@@ -158,7 +234,6 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
           err instanceof Error
             ? err.message
             : 'Camera permission is required for practice. You can still take the quiz.'
-        logPractice('camera_error', { lessonName, message, error: String(err) })
         setError(message)
       }
     }
@@ -170,107 +245,12 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
       stream?.getTracks().forEach((track) => track.stop())
       landmarkerRef.current?.close()
-      logPractice('camera_closed', { lessonId, lessonName })
     }
   }, [lessonId, lessonName])
 
-  async function scoreFrame(landmarks: number[]) {
-    const now = Date.now()
-    if (now - lastScoreAt.current < 400) return
-    lastScoreAt.current = now
-    try {
-      const cvUrl = process.env.NEXT_PUBLIC_CV_SERVICE_URL || 'http://127.0.0.1:8000'
-      const res = await fetch(`${cvUrl}/score`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ landmarks, lessonName }),
-      })
-      if (!res.ok) throw new Error('cv unavailable')
-      const data = (await res.json()) as {
-        score: number
-        signalCodes: string[]
-        basis?: ScoreBasis
-      }
-      setLiveScore(data.score)
-      setSignals(data.signalCodes)
-      setBasis(data.basis || null)
-      setScoreSource('cv-service')
-      const key = `${data.score}:${data.signalCodes.join(',')}`
-      if (lastLoggedSignals.current !== key) {
-        lastLoggedSignals.current = key
-        logPractice('live_score', {
-          lessonName,
-          score: data.score,
-          signalCodes: data.signalCodes,
-          source: 'cv-service',
-          basis: data.basis,
-        })
-      }
-    } catch {
-      // Local heuristic if CV service is offline
-      const xs = landmarks.filter((_, index) => index % 3 === 0)
-      const ys = landmarks.filter((_, index) => index % 3 === 1)
-      const inFrame = xs.every((x) => x > 0.05 && x < 0.95) && ys.every((y) => y > 0.05 && y < 0.95)
-      if (!inFrame) {
-        const localBasis = {
-          method: 'browser_fallback_heuristic',
-          rule: 'in_frame_margin_5pct',
-          reason: 'CV service offline; hand landmarks outside frame margin',
-        }
-        setLiveScore(20)
-        setSignals(['hand_not_in_frame'])
-        setBasis(localBasis)
-        setScoreSource('browser-fallback')
-        logPractice('live_score', {
-          lessonName,
-          score: 20,
-          signalCodes: ['hand_not_in_frame'],
-          source: 'browser-fallback',
-          basis: localBasis,
-        })
-        return
-      }
-      const spread = Math.max(...xs) - Math.min(...xs)
-      const score = Math.max(35, Math.min(92, Math.round(spread * 180)))
-      const signalCodes = score < 60 ? ['low_confidence', 'shape_mismatch'] : ['stable_hand']
-      const localBasis = {
-        method: 'browser_fallback_heuristic',
-        rule: 'hand_span_openness_heuristic',
-        formula: 'score = clamp(spread * 180, 35, 92)',
-        spread: Number(spread.toFixed(4)),
-        reason:
-          'CV service offline; feedback based on hand width span from MediaPipe landmarks (not full NZSL sign matching).',
-      }
-      setLiveScore(score)
-      setSignals(signalCodes)
-      setBasis(localBasis)
-      setScoreSource('browser-fallback')
-      const key = `${score}:${signalCodes.join(',')}`
-      if (lastLoggedSignals.current !== key) {
-        lastLoggedSignals.current = key
-        logPractice('live_score', {
-          lessonName,
-          score,
-          signalCodes,
-          source: 'browser-fallback',
-          basis: localBasis,
-        })
-      }
-    }
-  }
-
   async function saveAttempt() {
     setPending(true)
-    logPractice('saving_attempt', {
-      lessonId,
-      lessonName,
-      score: liveScore,
-      signalCodes: signals,
-      scoreSource,
-      basis,
-      feedbackPipeline:
-        'local score + signalCodes → /api/practice/submit → OpenAI (or fallback text) from those structured signals',
-    })
+
     try {
       const res = await fetch('/api/practice/submit', {
         method: 'POST',
@@ -278,10 +258,10 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           lessonId,
-          score: liveScore,
-          signalCodes: signals,
-          basis,
-          scoreSource,
+          score: highScore,
+          signalCodes: highSignals,
+          basis: highBasis,
+          scoreSource: highScoreSource === 'none' ? scoreSource : highScoreSource,
         }),
       })
       const data = (await res.json()) as ScoreResult & { error?: string }
@@ -290,14 +270,6 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
         setPending(false)
         return
       }
-      logPractice('feedback_received', {
-        lessonName,
-        score: data.score,
-        signalCodes: data.signalCodes,
-        usedOpenAI: data.usedOpenAI,
-        feedback: data.feedback,
-        basis: data.basis || basis,
-      })
       setResult(data)
     } catch {
       setError('Could not save practice attempt.')
@@ -325,18 +297,52 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
         </div>
       </div>
 
-      <div className="video-stage" style={{ position: 'relative' }}>
-        <video ref={videoRef} className="camera-view" playsInline muted aria-label="Camera preview" />
-        <canvas
-          ref={canvasRef}
-          aria-hidden="true"
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-        />
+      <div className="practice-stage">
+        <div className="practice-stage-video">
+          <div className="video-stage">
+            <video
+              ref={videoRef}
+              className="camera-view"
+              playsInline
+              muted
+              aria-label="Camera preview"
+              style={{ opacity: 0, position: 'absolute', pointerEvents: 'none' }}
+            />
+            <canvas
+              ref={canvasRef}
+              aria-label="Camera preview with hand tracking overlay"
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+            />
+          </div>
+        </div>
+
+        <aside className="practice-stage-aside" aria-live="polite">
+          <div className="score-card">
+            <span className="score-card-label">Live score</span>
+            <strong className="score-card-value">{ready ? `${liveScore}%` : '—'}</strong>
+            <p className="score-reason-text">
+              {basicScoreReason(
+                signals,
+                typeof basis?.reason === 'string' ? basis.reason : null,
+              )}
+            </p>
+          </div>
+          <div className="score-card">
+            <span className="score-card-label">High score</span>
+            <strong className="score-card-value">{highScore}%</strong>
+            <p className="score-reason-text">
+              {basicScoreReason(
+                highSignals,
+                typeof highBasis?.reason === 'string' ? highBasis.reason : null,
+              )}
+            </p>
+          </div>
+        </aside>
       </div>
 
       {cameraInfo ? (
-        <p className="muted" role="status">
-          {cameraInfo}. Open browser DevTools Console for `[NZSL practice]` logs.
+        <p className="muted practice-camera-meta" role="status">
+          {cameraInfo}. Hands detected: {handCount}.
         </p>
       ) : null}
 
@@ -344,40 +350,9 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
         <StatusBanner tone="error" title="Camera or practice issue">
           {error}
         </StatusBanner>
-      ) : (
-        <StatusBanner
-          tone={liveScore >= 70 ? 'ok' : 'warn'}
-          title={ready ? `Live score ${liveScore}%` : 'Starting camera…'}
-        >
-          Signals: {signals.join(', ').replaceAll('_', ' ')} · Source: {scoreSource}
-        </StatusBanner>
-      )}
-
-      {basis ? (
-        <section className="panel" aria-labelledby="feedback-basis-heading">
-          <h2 id="feedback-basis-heading" className="section-title" style={{ fontSize: '1.2rem' }}>
-            Feedback basis
-          </h2>
-          <p className="muted">
-            We score MediaPipe hand landmarks (in-frame + hand span). Text feedback is written from those
-            signal codes — not from recognizing the full NZSL sign yet.
-          </p>
-          <pre
-            style={{
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              fontSize: '0.9rem',
-              background: '#f0f4f2',
-              padding: '0.75rem',
-              borderRadius: 12,
-            }}
-          >
-            {JSON.stringify({ score: liveScore, signalCodes: signals, scoreSource, basis }, null, 2)}
-          </pre>
-        </section>
       ) : null}
 
+      {/* Practice feedback temporarily disabled (no OpenAI coaching UI).
       {result ? (
         <StatusBanner tone={result.score >= 70 ? 'ok' : 'warn'} title="Practice feedback">
           {result.feedback}
@@ -386,10 +361,11 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
           </div>
         </StatusBanner>
       ) : null}
+      */}
 
       <div className="btn-row">
         <Button type="button" onClick={saveAttempt} disabled={!ready || pending}>
-          {pending ? 'Saving…' : 'Save attempt & get feedback'}
+          {pending ? 'Saving…' : 'Save'}
         </Button>
         <Button href={`/learning/${lessonId}/quiz`} variant="secondary">
           Continue to quiz
