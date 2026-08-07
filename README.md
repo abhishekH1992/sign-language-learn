@@ -49,7 +49,7 @@ Open:
 
 Demo logins: `learner@example.com` / `password123`, `admin@example.com` / `password123`
 
-Sample content is not seeded on boot. Run `npm run seed` when you want the Number basics fixture (idempotent by lesson `name`).
+Sample content is not seeded on boot. Run `npm run seed` for Basics → Alphabets (A–Z lessons + media crops). Media-only: `npm run seed:alphabet`.
 
 ### Practice logs
 
