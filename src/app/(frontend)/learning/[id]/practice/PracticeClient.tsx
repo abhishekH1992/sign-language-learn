@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision'
 import { Button } from '@/components/ui/Button'
 import { StatusBanner } from '@/components/ui/StatusBanner'
@@ -19,6 +20,9 @@ type Props = {
   lessonName: string
   maoriName: string
   imageUrl: string
+  lessonsListHref: string
+  nextLessonHref?: string | null
+  pastScore?: number | null
 }
 
 type ScoreBasis = Record<string, unknown>
@@ -35,7 +39,16 @@ const MEDIAPIPE_VERSION = '0.10.35'
 const SCORE_INTERVAL_MS = 350
 const NO_HAND_HOLD_MS = 280
 
-export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Props) {
+export function PracticeClient({
+  lessonId,
+  lessonName,
+  maoriName,
+  imageUrl,
+  lessonsListHref,
+  nextLessonHref = null,
+  pastScore = null,
+}: Props) {
+  const router = useRouter()
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const landmarkerRef = useRef<HandLandmarker | null>(null)
@@ -58,6 +71,7 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
   const [basis, setBasis] = useState<ScoreBasis | null>(null)
   const [scoreSource, setScoreSource] = useState<'cv-service' | 'browser-fallback' | 'none'>('none')
   const [result, setResult] = useState<ScoreResult | null>(null)
+  const [markedDone, setMarkedDone] = useState(false)
   const [pending, setPending] = useState(false)
   const [cameraInfo, setCameraInfo] = useState('')
   const [handCount, setHandCount] = useState(0)
@@ -266,13 +280,16 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
       })
       const data = (await res.json()) as ScoreResult & { error?: string }
       if (!res.ok) {
-        setError(data.error || 'Could not save practice attempt.')
+        setError(data.error || 'Could not mark this lesson as done.')
         setPending(false)
         return
       }
       setResult(data)
+      setMarkedDone(true)
+      router.push(nextLessonHref || lessonsListHref)
+      router.refresh()
     } catch {
-      setError('Could not save practice attempt.')
+      setError('Could not mark this lesson as done.')
     } finally {
       setPending(false)
     }
@@ -337,6 +354,13 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
               )}
             </p>
           </div>
+          {pastScore != null ? (
+            <div className="score-card">
+              <span className="score-card-label">Past score</span>
+              <strong className="score-card-value">{Number(pastScore.toFixed(1))}%</strong>
+              <p className="score-reason-text">Your best saved score for this lesson.</p>
+            </div>
+          ) : null}
         </aside>
       </div>
 
@@ -364,14 +388,11 @@ export function PracticeClient({ lessonId, lessonName, maoriName, imageUrl }: Pr
       */}
 
       <div className="btn-row">
-        <Button type="button" onClick={saveAttempt} disabled={!ready || pending}>
-          {pending ? 'Saving…' : 'Save'}
+        <Button type="button" onClick={saveAttempt} disabled={!ready || pending || markedDone}>
+          {pending ? 'Saving…' : 'Mark as done'}
         </Button>
-        <Button href={`/learning/${lessonId}/quiz`} variant="secondary">
-          Continue to quiz
-        </Button>
-        <Button href={`/learning/${lessonId}`} variant="secondary">
-          Back to lesson
+        <Button href={lessonsListHref} variant="secondary">
+          Back to lessons
         </Button>
       </div>
     </div>

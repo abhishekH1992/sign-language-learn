@@ -16,8 +16,8 @@ const body = Source_Sans_3({
 })
 
 export const metadata = {
-  title: 'NZSL Learn',
-  description: 'Learn New Zealand Sign Language with video lessons, practice, and quizzes.',
+  title: 'Learn',
+  description: 'Learn with video lessons, practice, and quizzes.',
 }
 
 export default async function RootLayout(props: { children: React.ReactNode }) {

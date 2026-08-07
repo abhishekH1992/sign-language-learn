@@ -68,6 +68,14 @@ export const LessonProgress: CollectionConfig = {
       defaultValue: 0,
     },
     {
+      name: 'bestPracticeScore',
+      type: 'number',
+      defaultValue: 0,
+      admin: {
+        description: 'Best practice camera score (0–100) for this lesson.',
+      },
+    },
+    {
       name: 'lastActivityAt',
       type: 'date',
       admin: {

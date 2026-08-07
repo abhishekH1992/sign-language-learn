@@ -21,7 +21,7 @@ export async function seedContent(payload: Payload): Promise<void> {
       id: existingChapter.docs[0].id,
       data: {
         title: 'Basics',
-        description: 'Foundational NZSL skills, starting with the manual alphabet.',
+        description: 'Foundational skills, starting with the manual alphabet.',
         sortOrder: 1,
         published: true,
       },
@@ -35,7 +35,7 @@ export async function seedContent(payload: Payload): Promise<void> {
       data: {
         title: 'Basics',
         slug: 'basics',
-        description: 'Foundational NZSL skills, starting with the manual alphabet.',
+        description: 'Foundational skills, starting with the manual alphabet.',
         sortOrder: 1,
         published: true,
       },
@@ -100,7 +100,7 @@ export async function seedContent(payload: Payload): Promise<void> {
         source: 'upload' as const,
         media: mediaId,
       },
-      instructions: `Learn the NZSL fingerspelling handshape for the letter “${letter}”. Watch the video, then practise the sign.`,
+      instructions: `Learn the handshape for the letter “${letter}”. Watch the video, then practise it.`,
       sortOrder: index + 1,
       published: true,
     }

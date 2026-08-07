@@ -289,6 +289,10 @@ export interface LessonProgress {
   practiceDone?: boolean | null;
   quizPassed?: boolean | null;
   bestQuizScore?: number | null;
+  /**
+   * Best practice camera score (0–100) for this lesson.
+   */
+  bestPracticeScore?: number | null;
   lastActivityAt?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -544,6 +548,7 @@ export interface LessonProgressSelect<T extends boolean = true> {
   practiceDone?: T;
   quizPassed?: T;
   bestQuizScore?: T;
+  bestPracticeScore?: T;
   lastActivityAt?: T;
   updatedAt?: T;
   createdAt?: T;

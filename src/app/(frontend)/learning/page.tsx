@@ -1,9 +1,20 @@
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
-import { getLessonImageUrl } from '@/lib/lesson-image'
-import type { Lesson, Section } from '@/payload-types'
+import {
+  chapterLessons,
+  chapterSections,
+  nextUndoneLesson,
+} from '@/lib/hierarchy-progress'
+import { paginate, parsePage } from '@/lib/pagination'
+import { Button } from '@/components/ui/Button'
+import { Pagination } from '@/components/ui/Pagination'
 
-export default async function LearningPage() {
+type Props = {
+  searchParams: Promise<{ page?: string }>
+}
+
+export default async function LearningPage({ searchParams }: Props) {
+  const { page: pageParam } = await searchParams
   const { payload, user } = await requireUser()
 
   const [chapters, progress] = await Promise.all([
@@ -11,93 +22,90 @@ export default async function LearningPage() {
       collection: 'chapters',
       where: { published: { equals: true } },
       sort: 'sortOrder',
-      limit: 50,
+      limit: 200,
       depth: 3,
     }),
     payload.find({
       collection: 'lesson-progress',
-      where: { user: { equals: user.id } },
-      limit: 200,
+      where: { user: { equals: user!.id } },
+      limit: 500,
       depth: 0,
     }),
   ])
 
   const progressByLesson = new Map(
-    progress.docs.map((item) => [typeof item.lesson === 'object' ? item.lesson.id : item.lesson, item]),
+    progress.docs.map((item) => [
+      String(typeof item.lesson === 'object' ? item.lesson.id : item.lesson),
+      item,
+    ]),
   )
+
+  const slice = paginate(chapters.docs, parsePage(pageParam))
 
   return (
     <div className="shell stack">
       <header>
         <h1 className="section-title">Learning</h1>
-        <p className="lede muted">Chapters, sections, and lessons. Each lesson has video, practice, and a quiz.</p>
+        <p className="lede muted">Choose a chapter to browse sections and lessons.</p>
       </header>
 
-      {chapters.docs.map((chapter) => {
-        const sectionRows = chapter.sections || []
+      <section className="panel" aria-labelledby="chapters-heading">
+        <h2 id="chapters-heading" className="section-title" style={{ fontSize: '1.5rem' }}>
+          Chapters
+        </h2>
 
-        return (
-          <section key={chapter.id} className="panel" aria-labelledby={`chapter-${chapter.id}`}>
-            <h2 id={`chapter-${chapter.id}`} className="section-title" style={{ fontSize: '1.6rem' }}>
-              {chapter.title}
-            </h2>
-            {chapter.description ? <p className="muted">{chapter.description}</p> : null}
-
-            {sectionRows.length === 0 ? (
-              <p className="muted" style={{ marginTop: '1rem' }}>
-                No sections in this chapter yet.
-              </p>
-            ) : (
-              sectionRows.map((row, index) => {
-                const section = typeof row.section === 'object' ? (row.section as Section) : null
-                if (!section) return null
-
-                const lessons = (section.lessons || [])
-                  .map((lessonRow) =>
-                    typeof lessonRow.lesson === 'object' ? (lessonRow.lesson as Lesson) : null,
-                  )
-                  .filter((lesson): lesson is Lesson => Boolean(lesson?.published))
+        {slice.total === 0 ? (
+          <p className="muted" style={{ marginTop: '1rem' }}>
+            No published chapters yet.
+          </p>
+        ) : (
+          <>
+            <ul className="list learning-nav-list">
+              {slice.items.map((chapter) => {
+                const lessons = chapterLessons(chapter)
+                const sections = chapterSections(chapter)
+                const next = nextUndoneLesson(lessons, progressByLesson)
+                const done = lessons.filter(
+                  (lesson) => progressByLesson.get(String(lesson.id))?.status === 'completed',
+                ).length
+                // Drill into sections, or lessons when the chapter has no sections.
+                const drillHref = `/learning/chapter/${chapter.id}`
 
                 return (
-                  <div key={section.id || index} style={{ marginTop: '1.25rem' }}>
-                    <h3 className="section-title" style={{ fontSize: '1.2rem' }}>
-                      {section.title}
-                    </h3>
-                    <ul className="list" style={{ marginTop: '0.75rem' }}>
-                      {lessons.map((lesson) => {
-                        const state = progressByLesson.get(lesson.id)
-                        const done = state?.status === 'completed'
-                        return (
-                          <li key={lesson.id}>
-                            <Link className="lesson-row" href={`/learning/${lesson.id}`}>
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={getLessonImageUrl(lesson.image, '/placeholder-sign.svg')}
-                                alt=""
-                                width={88}
-                                height={66}
-                              />
-                              <div>
-                                <strong>{lesson.name}</strong>
-                                <div className="muted">
-                                  {lesson.maoriName || '—'} · {lesson.wordClass || 'sign'}
-                                </div>
-                              </div>
-                              <span className={`badge ${done ? 'badge-ok' : 'badge-neutral'}`}>
-                                {done ? '✓ Completed' : 'Continue →'}
-                              </span>
-                            </Link>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </div>
+                  <li key={chapter.id} className="learning-nav-row">
+                    <Link className="learning-nav-copy" href={drillHref}>
+                      <strong>{chapter.title}</strong>
+                      <div className="muted">
+                        {sections.length > 0
+                          ? `${sections.length} section${sections.length === 1 ? '' : 's'} · ${lessons.length} lesson${lessons.length === 1 ? '' : 's'}`
+                          : `${lessons.length} lesson${lessons.length === 1 ? '' : 's'}`}
+                        {lessons.length > 0 ? ` · ${done}/${lessons.length} done` : null}
+                      </div>
+                      {chapter.description ? (
+                        <p className="muted learning-nav-desc">{chapter.description}</p>
+                      ) : null}
+                    </Link>
+                    <div className="learning-nav-actions">
+                      {lessons.length > 0 && !next ? (
+                        <span className="badge badge-ok">✓ Complete</span>
+                      ) : (
+                        <Button href={drillHref} variant="primary">
+                          Continue →
+                        </Button>
+                      )}
+                    </div>
+                  </li>
                 )
-              })
-            )}
-          </section>
-        )
-      })}
+              })}
+            </ul>
+            <Pagination
+              slice={slice}
+              hrefForPage={(page) => (page <= 1 ? '/learning' : `/learning?page=${page}`)}
+              label="chapters"
+            />
+          </>
+        )}
+      </section>
     </div>
   )
 }

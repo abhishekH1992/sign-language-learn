@@ -1,7 +1,7 @@
 {
   "name": "nzsl-learn",
   "version": "1.0.0",
-  "description": "NZSL learning app with Payload CMS, practice feedback, and OpenAI tips",
+  "description": "Learning app with Payload CMS, practice feedback, and OpenAI tips",
   "license": "MIT",
   "type": "module",
   "scripts": {

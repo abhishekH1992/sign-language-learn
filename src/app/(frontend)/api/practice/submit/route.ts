@@ -41,6 +41,8 @@ export async function POST(request: Request) {
   await upsertLessonProgress(payload, user, lesson.id, {
     practiceDone: true,
     videoWatched: true,
+    bestPracticeScore: body.score,
+    status: 'completed',
   })
 
   return NextResponse.json({
@@ -49,5 +51,6 @@ export async function POST(request: Request) {
     feedback: '',
     usedOpenAI: false,
     basis: body.basis ?? null,
+    status: 'completed',
   })
 }

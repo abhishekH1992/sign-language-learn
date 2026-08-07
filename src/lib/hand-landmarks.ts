@@ -65,6 +65,13 @@ export function scoreColor(score: number): string {
   return '#b42318'
 }
 
+/** CSS class for badges that match practice overlay score colors. */
+export function scoreBadgeClass(score: number): string {
+  if (score >= 70) return 'badge-score-high'
+  if (score >= 45) return 'badge-score-mid'
+  return 'badge-score-low'
+}
+
 export function drawHandOverlay(
   ctx: CanvasRenderingContext2D,
   hands: Landmark[],

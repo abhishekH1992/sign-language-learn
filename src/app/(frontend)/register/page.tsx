@@ -10,7 +10,7 @@ export default async function RegisterPage() {
   return (
     <div className="hero-auth">
       <section className="auth-panel" aria-labelledby="register-title">
-        <h1 id="register-title">NZSL Learn</h1>
+        <h1 id="register-title">Learn</h1>
         <p className="lede">Create your learner account to track progress and retake quizzes freely.</p>
         <RegisterForm />
         <p className="muted" style={{ marginTop: '1.25rem' }}>
