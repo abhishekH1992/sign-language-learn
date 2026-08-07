@@ -38,7 +38,7 @@ export function describeSignalCode(code: string): string {
     return 'Keep your hands fully visible in the camera frame.'
   }
   if (code === 'need_both_hands') {
-    return 'NZSL fingerspelling uses two hands — bring your second hand into view.'
+    return 'This letter uses two hands — bring your second hand into view.'
   }
   if (code === 'waiting_for_hand') {
     return 'Show your hands to the camera to start scoring.'
@@ -98,7 +98,7 @@ export async function generateQuizFeedback(input: QuizFeedbackInput): Promise<{
         {
           role: 'system',
           content:
-            'You coach NZSL learners. Reply in 2–3 short sentences of clear English. Be encouraging and specific. Never mention audio or listening. Do not use markdown.',
+            'You coach learners practising handshapes. Reply in 2–3 short sentences of clear English. Be encouraging and specific. Never mention audio or listening. Do not use markdown.',
         },
         {
           role: 'user',
@@ -143,7 +143,7 @@ export async function generatePracticeFeedback(input: PracticeFeedbackInput): Pr
   //       {
   //         role: 'system',
   //         content:
-  //           'You coach NZSL practice using structured camera signals (not video). Reply in 2 short sentences. Visual, encouraging, no audio references, no markdown.',
+  //           'You coach practice using structured camera signals (not video). Reply in 2 short sentences. Visual, encouraging, no audio references, no markdown.',
   //       },
   //       {
   //         role: 'user',

@@ -49,7 +49,7 @@ export async function seedAlphabetMedia(
   const mediaByLetter: Record<string, number | string> = {}
 
   for (const letter of ALPHABET_LETTERS) {
-    const alt = `NZSL alphabet ${letter}`
+    const alt = `Alphabet letter ${letter}`
     const existing = await payload.find({
       collection: 'media',
       where: { alt: { equals: alt } },

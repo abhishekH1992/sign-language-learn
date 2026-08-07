@@ -10,7 +10,7 @@ export default async function LoginPage() {
   return (
     <div className="hero-auth">
       <section className="auth-panel" aria-labelledby="login-title">
-        <h1 id="login-title">NZSL Learn</h1>
+        <h1 id="login-title">Learn</h1>
         <p className="lede">Sign in to continue your learning journey.</p>
         <LoginForm />
         <p className="muted" style={{ marginTop: '1.25rem' }}>

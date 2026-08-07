@@ -24,7 +24,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     meta: {
-      titleSuffix: '— NZSL Learn',
+      titleSuffix: '— Learn',
     },
   },
   collections: [

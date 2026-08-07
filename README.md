@@ -1,6 +1,6 @@
-# NZSL Learn
+# Learn
 
-Accessible NZSL learning app: Payload CMS admin, Next.js learner UI, Postgres, OpenAI constructive feedback, and a Python MediaPipe-friendly practice scoring service.
+Accessible learning app: Payload CMS admin, Next.js learner UI, Postgres, OpenAI constructive feedback, and a Python MediaPipe-friendly practice scoring service.
 
 ## Stack
 
@@ -26,7 +26,7 @@ npm install
 # Or Docker:
 #   npm run db:up
 
-# 3) Parse NZSL HTML dump → seed JSON (first time / when dumps change)
+# 3) Parse HTML dump → seed JSON (first time / when dumps change)
 npm run parse:nzsl
 
 # 4) Terminal A — Next.js + Payload
@@ -50,12 +50,6 @@ Open:
 Demo logins: `learner@example.com` / `password123`, `admin@example.com` / `password123`
 
 Sample content is not seeded on boot. Run `npm run seed` for Basics → Alphabets (A–Z lessons + media crops). Media-only: `npm run seed:alphabet`.
-
-### Practice logs
-
-On the practice page, open DevTools → Console for `[NZSL practice]` logs (camera open, live score, feedback basis).  
-CV service logs appear in the Terminal B uvicorn output.  
-Server feedback logs appear in the Terminal A Next.js output.
 
 ## Scripts
 

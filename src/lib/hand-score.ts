@@ -16,7 +16,7 @@ type LetterTemplate = {
 }
 
 /**
- * NZSL two-hand fingerspelling curl targets (0=extended, 1=curled).
+ * Two-hand letter curl targets (0=extended, 1=curled).
  * Ordered as [baseHand x5, activeHand x5] — matching tries both assignments.
  */
 const LETTER_TEMPLATES: Record<string, LetterTemplate> = {
@@ -215,7 +215,7 @@ export function scoreHandLandmarks(
         rule: 'alphabet_requires_two_hands',
         handCount: hands.length,
         lesson: letter,
-        reason: 'NZSL fingerspelling uses two hands. Keep both hands in frame.',
+        reason: 'This letter uses two hands. Keep both hands in frame.',
       },
     }
   }
@@ -241,7 +241,7 @@ export function scoreHandLandmarks(
           contact: template.contact ?? null,
         },
         reason:
-          'Score compares finger curls (both hand role assignments) and tip contact to the NZSL letter template.',
+          'Score compares finger curls (both hand role assignments) and tip contact to the letter template.',
       },
     }
   }
@@ -263,7 +263,7 @@ export function scoreHandLandmarks(
       lesson: letter || null,
       handCount: hands.length,
       curls,
-      reason: 'Score uses hand visibility and finger articulation stability (not full NZSL sign ID).',
+      reason: 'Score uses hand visibility and finger articulation stability (not full letter ID).',
     },
   }
 }

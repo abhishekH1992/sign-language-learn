@@ -11,6 +11,8 @@ type Stat = {
 
 type Props = {
   progress: HierarchyProgress
+  /** When true, emphasise remaining work for new learners. */
+  emphasiseRemaining?: boolean
 }
 
 function ProgressRing({
@@ -68,7 +70,7 @@ function ProgressRing({
   )
 }
 
-export function ProgressStatCards({ progress }: Props) {
+export function ProgressStatCards({ progress, emphasiseRemaining = false }: Props) {
   const stats: Stat[] = [
     {
       key: 'chapters',
@@ -119,7 +121,9 @@ export function ProgressStatCards({ progress }: Props) {
               <p className="muted progress-stat-hint">
                 {stat.done === stat.total && stat.total > 0
                   ? `All ${allUnit} complete`
-                  : `${remaining} ${remUnit} remaining`}
+                  : emphasiseRemaining && stat.done === 0
+                    ? `${remaining} ${remUnit} to explore`
+                    : `${remaining} ${remUnit} remaining`}
               </p>
             </div>
           </li>

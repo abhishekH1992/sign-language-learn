@@ -26,13 +26,13 @@ export default async function DashboardPage() {
     }),
     payload.find({
       collection: 'lesson-progress',
-      where: { user: { equals: user.id } },
+      where: { user: { equals: user!.id } },
       limit: 200,
       depth: 0,
     }),
     payload.find({
       collection: 'notifications',
-      where: { user: { equals: user.id } },
+      where: { user: { equals: user!.id } },
       limit: 8,
       sort: '-createdAt',
     }),
@@ -78,14 +78,15 @@ export default async function DashboardPage() {
         <p className="lede muted">See your progress, upcoming lessons, and notifications.</p>
       </header>
 
-      {learnerHasProgress ? (
-        <section className="panel" aria-labelledby="progress-heading">
-          <h2 id="progress-heading" className="section-title" style={{ fontSize: '1.5rem' }}>
-            Progress
-          </h2>
-          <ProgressStatCards progress={hierarchyProgress} />
-        </section>
-      ) : null}
+      <section className="panel" aria-labelledby="progress-heading">
+        <h2 id="progress-heading" className="section-title" style={{ fontSize: '1.5rem' }}>
+          Progress
+        </h2>
+        <ProgressStatCards
+          progress={hierarchyProgress}
+          emphasiseRemaining={!learnerHasProgress}
+        />
+      </section>
 
       {inProgressChapters.length > 0 ? (
         <section className="panel" aria-labelledby="continue-heading">
@@ -136,7 +137,7 @@ export default async function DashboardPage() {
               const subtitleParts = [
                 lesson.maoriName ? `Māori: ${lesson.maoriName}` : null,
                 lesson.secondaryName ? `Also: ${lesson.secondaryName}` : null,
-                isLetter ? `Letter ${lesson.name.toUpperCase()} · fingerspelling` : null,
+                isLetter ? `Letter ${lesson.name.toUpperCase()}` : null,
                 !isLetter && lesson.wordClass ? lesson.wordClass : null,
               ].filter(Boolean)
 

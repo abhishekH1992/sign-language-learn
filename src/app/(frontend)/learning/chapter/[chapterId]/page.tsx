@@ -42,7 +42,7 @@ function LessonList({
               <div>
                 <strong>{lesson.name}</strong>
                 <div className="muted">
-                  {lesson.maoriName || '—'} · {lesson.wordClass || 'sign'}
+                  {lesson.maoriName || '—'} · {lesson.wordClass || 'lesson'}
                 </div>
               </div>
               <span className={`badge ${done ? 'badge-ok' : 'badge-neutral'}`}>

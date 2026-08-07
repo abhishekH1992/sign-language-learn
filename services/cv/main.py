@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 log = logging.getLogger("nzsl.cv")
 
-app = FastAPI(title="NZSL Practice CV", version="2.1.0")
+app = FastAPI(title="Practice CV", version="2.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,7 +36,7 @@ class ScoreResponse(BaseModel):
     basis: dict[str, Any]
 
 
-# NZSL two-hand fingerspelling: [baseHand x5, activeHand x5], order-invariant matching.
+# Two-hand letter templates: [baseHand x5, activeHand x5], order-invariant matching.
 LETTER_TEMPLATES: dict[str, dict[str, Any]] = {
     # A: open flat hand + index pointing to thumb tip
     "A": {
@@ -210,7 +210,7 @@ def score_landmarks(landmarks: list[float], lesson_name: str = "") -> ScoreRespo
             "rule": "alphabet_requires_two_hands",
             "handCount": len(hands),
             "lesson": letter,
-            "reason": "NZSL fingerspelling uses two hands. Keep both hands in frame.",
+            "reason": "This letter uses two hands. Keep both hands in frame.",
         }
         log.info("score lesson=%s score=%s signals=%s", letter, presence, ["need_both_hands"])
         return ScoreResponse(score=presence, signalCodes=["need_both_hands"], basis=basis)
@@ -231,7 +231,7 @@ def score_landmarks(landmarks: list[float], lesson_name: str = "") -> ScoreRespo
             "template": template,
             "reason": (
                 "Score compares finger curls (both hand role assignments) and tip contact "
-                "to the NZSL letter template."
+                "to the letter template."
             ),
         }
         log.info(
@@ -260,7 +260,7 @@ def score_landmarks(landmarks: list[float], lesson_name: str = "") -> ScoreRespo
         "lesson": letter or None,
         "handCount": len(hands),
         "curls": curls,
-        "reason": "Score uses hand visibility and finger articulation stability (not full NZSL sign ID).",
+        "reason": "Score uses hand visibility and finger articulation stability (not full letter ID).",
     }
     log.info("score lesson=%s score=%s signals=%s", letter or lesson_name, score, signals)
     return ScoreResponse(score=score, signalCodes=signals, basis=basis)

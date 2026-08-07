@@ -100,7 +100,7 @@ export default async function SectionLearningPage({ params, searchParams }: Prop
                           <Link href={`/learning/${lesson.id}`}>{lesson.name}</Link>
                         </strong>
                         <div className="muted">
-                          {lesson.maoriName || '—'} · {lesson.wordClass || 'sign'}
+                          {lesson.maoriName || '—'} · {lesson.wordClass || 'lesson'}
                         </div>
                       </div>
                       {done ? (

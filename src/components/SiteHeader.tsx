@@ -29,7 +29,7 @@ export function SiteHeader({ email }: Props) {
         Skip to content
       </a>
       <Link className="brand" href={email ? '/dashboard' : '/'}>
-        NZSL Learn
+        Learn
       </Link>
       <nav className="nav" aria-label="Primary">
         {email ? (

@@ -37,7 +37,7 @@ export default async function LessonPage({ params }: Props) {
       </p>
       <header>
         <div className="btn-row" style={{ marginBottom: '0.75rem' }}>
-          <span className="badge badge-neutral">{lesson.wordClass || 'sign'}</span>
+          <span className="badge badge-neutral">{lesson.wordClass || 'lesson'}</span>
         </div>
         <h1 className="section-title">{lesson.name}</h1>
         <p className="lede muted">
@@ -53,7 +53,7 @@ export default async function LessonPage({ params }: Props) {
         <LessonActions
           lessonId={String(lesson.id)}
           videoUrl={lesson.videoUrl}
-          title={`NZSL sign: ${lesson.name}`}
+          title={lesson.name}
         />
         {lesson.instructions ? (
           <p className="muted" style={{ marginTop: '1rem' }}>

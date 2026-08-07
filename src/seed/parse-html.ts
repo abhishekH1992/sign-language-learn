@@ -13,7 +13,7 @@ export type ParsedLesson = {
   signPageUrl: string
 }
 
-const EXCLUDED_NZSL_IDS = new Set([5220]) // keyword false positive: defecate
+const EXCLUDED_IDS = new Set([5220]) // keyword false positive: defecate
 
 function clean(text: string): string {
   return text.replace(/\s+/g, ' ').trim()
@@ -39,7 +39,7 @@ export function parseNzslSearchHtml(html: string): ParsedLesson[] {
     if (!videoMatch || !idMatch) continue
 
     const nzslId = Number(idMatch[1])
-    if (EXCLUDED_NZSL_IDS.has(nzslId)) continue
+    if (EXCLUDED_IDS.has(nzslId)) continue
 
     const name = capture(card, 'main_gloss')
     const secondaryName = capture(card, 'secondary_gloss')
@@ -74,7 +74,7 @@ function main() {
       title: 'Number basics',
       slug: 'number-basics',
       description:
-        'Sample NZSL lessons parsed from the official dictionary search for “number”. Videos link to NZSL Signbank media for learning reference.',
+        'Sample lessons parsed from a dictionary search for “number”. Videos link to reference media for learning.',
       sortOrder: 1,
     },
     lessons,
